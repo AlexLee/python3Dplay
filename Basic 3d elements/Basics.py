@@ -51,7 +51,7 @@ class edge:
     def intersects(self,other):
         #Other is another edge. Checks if other intersects with self. Sharing endpoints does not qualify as intersection. Returns boolean.
         sanityCheck = self.a.dist(other.a) or self.a.dist(other.b) or self.b.dist(other.a) or self.b.dist(other.b)<self.length() #If the length of self cannot reach either end of other, they cannot intersect.
-        if not sanityCheck: return False
+        if not sanityCheck or self.parallel(other): return False
     def parallel(self,other):
         #Checks if self is parallel to another edge other. Returns a boolean.
         return self.getDir()==other.getDir()
@@ -93,6 +93,7 @@ class facet:
             b = self.edges[1].length()
             c = self.edges[2].length()
             return (p*(p-a)*(p-b)*(p-c))**0.5
+        
 
 
 
