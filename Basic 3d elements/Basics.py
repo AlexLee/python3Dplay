@@ -1,9 +1,9 @@
 class point:
     #Stores a point in 3 space
     def __init__(self,x,y,z):
-        self.x=x
-        self.y=y
-        self.z=z
+        self.x=float(x)
+        self.y=float(y)
+        self.z=float(z)
     def __str__(self):
         #returns the coordinates of self as a str of format x,y,z
         return str(self.x)+","+str(self.y)+","+str(self.z)
@@ -158,7 +158,7 @@ class plane:
         elif parameter>=0: return True
         return False             
 
-class form:
+class mesh:
     #Defines a collection of tris which is ideally a closed surface.
     def __init__(self,tris):
         self.tris = tris
@@ -185,7 +185,7 @@ class form:
             self.zMax=max(self.zMax,pointA.z)
             self.zMin=min(self.zMin,pointA.z)            
         pointCount = len(self.points)
-        self.center = point(xSum/pointCount,ySum/pointCount,zSum/pointCount) #Center of all points in the form, useful for some optimizations.
+        self.center = point(xSum/pointCount,ySum/pointCount,zSum/pointCount) #Center of all points in the mesh, useful for some optimizations.
     def contains(self,point_in):
         #Checks whether point is inside self.
         if not self.xMin<=point_in.x<=self.xMax: return False #Simple bounding box check
@@ -224,5 +224,5 @@ bleft2=tri([topleft,bottomleft,bottomback])
 bright1=tri([topright,topback,bottomback])
 bright2=tri([topright,bottomright,bottomback])
 
-cube = form([top1,top2,fleft1,fleft2,fright1,fright2,bot1,bot2,bleft1,bleft2,bright1,bright2])
+cube = mesh([top1,top2,fleft1,fleft2,fright1,fright2,bot1,bot2,bleft1,bleft2,bright1,bright2])
 pointB=point(2,2,2)
