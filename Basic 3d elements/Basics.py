@@ -44,7 +44,9 @@ class vector:
         return ((self.x)**2+(self.y)**2+(self.z)**2)**0.5
     def unit(self):
         #Returns the unit vector of self
-        return self/abs(self)
+        if abs(self)!=0:
+            return self/abs(self)
+        return self
     def __str__(self):
         #Returns the vector in notation [x,y,z]
         return "["+str(self.x)+","+str(self.y)+","+str(self.z)+"]"
@@ -106,6 +108,8 @@ class tri:
             pointB = point
             self.edges.append(edge(pointA,pointB))
             pointA = point
+    def __str__(self):
+        return str(p1) + " , " + str(p2) + " , " + str(p3)
     def perimeter(self):
         #Return the perimeter of the facet
         perim = 0
@@ -154,12 +158,71 @@ class plane:
         elif parameter>=0: return True
         return False             
 
+class form:
+    #Defines a collection of tris which is ideally a closed surface.
+    def __init__(self,tris):
+        self.tris = tris
+        self.points = []
+        for tri in self.tris:
+            self.points += tri.points
+        xSum = 0
+        ySum = 0
+        zSum = 0
+        self.xMax=0 #Max and mins on each axis provide useful optimizations. Trades long load times for short operations.
+        self.xMin=0
+        self.yMax=0
+        self.yMin=0
+        self.zMax=0
+        self.zMin=0
+        for pointA in self.points:
+            xSum += pointA.x
+            ySum += pointA.y
+            zSum += pointA.z
+            self.xMax=max(self.xMax,pointA.x)
+            self.xMin=min(self.xMin,pointA.x)
+            self.yMax=max(self.yMax,pointA.y)
+            self.yMin=min(self.yMin,pointA.y)
+            self.zMax=max(self.zMax,pointA.z)
+            self.zMin=min(self.zMin,pointA.z)            
+        pointCount = len(self.points)
+        self.center = point(xSum/pointCount,ySum/pointCount,zSum/pointCount) #Center of all points in the form, useful for some optimizations.
+    def contains(self,point_in):
+        #Checks whether point is inside self.
+        if not self.xMin<=point_in.x<=self.xMax: return False #Simple bounding box check
+        if not self.yMin<=point_in.y<=self.yMax: return False
+        if not self.zMin<=point_in.z<=self.zMax: return False
+        testPoint = point(0,0,self.zMax+50)
+        testVector = vector( testPoint.x-point_in.x, testPoint.y-point_in.y, testPoint.z-point_in.z,point_in)
+        print "testVector =" + str(testVector)
+        hits = 0
+        for tri in self.tris:
+            if tri.vector_intersect(testVector): hits+=1
+        print "hits: "+ str(hits)
+        if hits%2==1: return True
+        return False
 
 
+topfront=point(5,5,5)
+topleft=point(5,0,5)
+topright=point(0,5,5)
+topback=point(0,0,5)
+bottomback=point(0,0,0)
+bottomfront=point(5,5,0)
+bottomleft=point(5,0,0)
+bottomright=point(0,5,0)
 
+top1=tri([topfront,topleft,topright])
+top2=tri([topback,topleft,topright])
+fleft1=tri([topfront,topleft,bottomleft])
+fleft2=tri([topfront,bottomleft,bottomfront])
+fright1=tri([topfront,topright,bottomright])
+fright2=tri([topfront,bottomright,bottomfront])
+bot1=tri([bottomfront,bottomleft,bottomright])
+bot2=tri([bottomback,bottomleft,bottomright])
+bleft1=tri([topleft,topback,bottomback])
+bleft2=tri([topleft,bottomleft,bottomback])
+bright1=tri([topright,topback,bottomback])
+bright2=tri([topright,bottomright,bottomback])
 
-p1 = point(5,5,5)
-p2 = point(5,-5,5)
-p3 = point(-5,0,5)
-v1 = vector(0,0,20,point(50,0,0))
-f1 = tri([p1,p2,p3])
+cube = form([top1,top2,fleft1,fleft2,fright1,fright2,bot1,bot2,bleft1,bleft2,bright1,bright2])
+pointB=point(2,2,2)
