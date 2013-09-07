@@ -13,9 +13,9 @@ class point:
     def __sub__(self,other):
         #Returns a vector from other (a point) to self
         return vector(self.x-other.x,self.y-other.y,self.z-other.z)
-    def __add__(self,vector):
+    def __add__(self,vector_in):
         #Returns a point found by adding vector to self's position.
-        return point(self.x+vector.x,self.y+vector.y,self.z+vector.z)
+        return point(self.x+vector_in.x,self.y+vector_in.y,self.z+vector_in.z)
     
 
 class vector:
@@ -39,12 +39,12 @@ class vector:
     def __mul__(self,c):
         #Implements the * operator as scalar multiplication
         return vector(self.x*c,self.y*c,self.z*c)
-    def length(self):
+    def __abs__(self):
         #Returns length of the vector
         return ((self.x)**2+(self.y)**2+(self.z)**2)**0.5
     def unit(self):
         #Returns the unit vector of self
-        return self/self.length()
+        return self/abs(self)
     def __str__(self):
         #Returns the vector in notation [x,y,z]
         return "["+str(self.x)+","+str(self.y)+","+str(self.z)+"]"
@@ -91,11 +91,11 @@ class tri:
         else:
             p1 = points[0]
             p2 = points[1]
-            p3 = points[3]
+            p3 = points[2]
             va = vector(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z)
             vb = vector(p1.x-p3.x,p1.y-p3.y,p1.z-p3.z)
             value = va.cross(vb)
-            self.normal = product.unit()
+            self.normal = value.unit()
         self.plane = plane(self.points[0],self.normal)
         self.edges = []
         #Create edges through the list of points. the first edge goes from self.points[0] to self.points[1] and the last from self.points[-1] to self.points[0]
@@ -119,6 +119,25 @@ class tri:
         b = self.edges[1].length()
         c = self.edges[2].length()
         return (p*(p-a)*(p-b)*(p-c))**0.5
+    def vector_intersect(self,vector_in):
+        #Checks if the vector intersects self.plane, then tests whether the point is inside tri.
+        intersect = self.plane.vector_intersect(vector_in,True)
+        if not intersect: return False
+        else:
+            #point is inside tri iff ABxAP.unit==BCxBP.unit==CAxCP.unit
+            p1 = self.points[0]
+            p2 = self.points[1]
+            p3 = self.points[2]
+            AB=vector( p1.x-p2.x, p1.y-p2.y, p1.z-p2.z)
+            BC=vector( p2.x-p3.x, p2.y-p3.y, p2.z-p3.z)
+            CA=vector( p3.x-p1.x, p3.y-p1.y, p3.z-p1.z)
+            AP=vector( p1.x-intersect.x, p1.y-intersect.y, p1.z-intersect.z)
+            BP=vector( p2.x-intersect.x, p2.y-intersect.y, p2.z-intersect.z)
+            CP=vector( p3.x-intersect.x, p3.y-intersect.y, p3.z-intersect.z)
+            c1 = AB.cross(AP).unit()
+            c2 = BC.cross(BP).unit()
+            c3 = CA.cross(CP).unit()
+            return c1==c2==c3
   
 
 class plane:
@@ -126,30 +145,21 @@ class plane:
     def __init__(self,point,normal):
         self.origin = point
         self.normal = normal.unit()
-    def vector_intersect(self,vector,coords=False):
-        if self.normal.dot(vector)==0: return False
-        parameter = self.normal.dot(self.origin-vector.origin)/self.normal.dot(vector)
+    def vector_intersect(self,vector_in,coords=False):
+        #Tests whether a vector intersects 
+        if self.normal.dot(vector_in)==0: return False
+        parameter = self.normal.dot(self.origin-vector_in.origin)/self.normal.dot(vector_in)
         if coords:
-            if parameter>=0: return vector.origin+(vector*parameter)
+            if parameter>=0: return vector_in.origin+(vector_in*parameter)
         elif parameter>=0: return True
-        return False
-
-            
-            
-                
+        return False             
 
 
 
 
-vector1 = vector(0,0,5,point(0,0,2))
-plane1 = plane(point(50,5,3),vector(0,0,1))
 
-##p1 = point(0,0,0)
-##p2 = point(0,0,3)
-##p3=point(3,4,0)
-##e1 = edge(p1,p2)
-##e2 = edge(p2,p1)
-##e3 = edge(p1,p3)
-##n1 = vector(0,0,1)
-##v1 = vector(0,1,0)
-##f1 = tri([p1,p2,p3],n1)
+p1 = point(5,5,5)
+p2 = point(5,-5,5)
+p3 = point(-5,0,5)
+v1 = vector(0,0,20,point(50,0,0))
+f1 = tri([p1,p2,p3])
