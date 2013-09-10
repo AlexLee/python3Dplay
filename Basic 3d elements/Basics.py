@@ -58,7 +58,7 @@ class vector:
         return self.unit()==other.unit()
     def cross(self,other):
         #Implements cross product operations on self and another vector.
-        return vector(self.y*other.z-self.z*other.y,self.x*other.z-self.z*other.x,self.x*other.y-self.y*other.x)
+        return vector(self.y*other.z-self.z*other.y,-self.x*other.z+self.z*other.x,self.x*other.y-self.y*other.x)
     def dot(self,other):
         #Implements dot product operations on self and another vector.
         return self.x*other.x+self.y*other.y+self.z*other.z
