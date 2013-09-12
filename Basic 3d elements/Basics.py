@@ -16,6 +16,14 @@ class point:
     def __add__(self,vector_in):
         #Returns a point found by adding vector to self's position.
         return point(self.x+vector_in.x,self.y+vector_in.y,self.z+vector_in.z)
+    def on(self,p):
+        #Checks if self is on the plane p
+        testVector = vector(p.origin.x-self.x,p.origin.y-self.y,p.origin.z-self.z)
+        return 0==testVector.dot(p.normal)
+    def above(self,p):
+        #Checks if self is above the plane p.
+        testVector = vector(0,0,100,self)
+        return p.vector_intersect(testVector)
     
 
 class vector:
@@ -108,6 +116,7 @@ class tri:
             pointB = point
             self.edges.append(edge(pointA,pointB))
             pointA = point
+        
     def __str__(self):
         return str(p1) + " , " + str(p2) + " , " + str(p3)
     def perimeter(self):
@@ -123,8 +132,8 @@ class tri:
         b = self.edges[1].length()
         c = self.edges[2].length()
         return (p*(p-a)*(p-b)*(p-c))**0.5
-    def vector_intersect(self,vector_in):
-        #Checks if the vector intersects self.plane, then tests whether the point is inside tri.
+    def vector_intersect(self,vector_in,coords=False):
+        #Checks if the vector intersects self.plane, then tests whether the point is inside tri. Coords decides whether a boolean or a point object is returned.
         intersect = self.plane.vector_intersect(vector_in,True)
         if not intersect: return False
         else:
@@ -141,7 +150,24 @@ class tri:
             c1 = AB.cross(AP).unit()
             c2 = BC.cross(BP).unit()
             c3 = CA.cross(CP).unit()
-            return c1==c2==c3
+            if not coords: return c1==c2==c3
+            else: return intersect
+    def plane_intersect(self,planeIn):
+        #Returns an edge in both plane p and self. A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
+        p1 = self.points[0]
+        p2 = self.points[1]
+        p3 = self.points[2]
+        sides=[vector( p1.x-p2.x, p1.y-p2.y, p1.z-p2.z), vector( p2.x-p3.x, p2.y-p3.y, p2.z-p3.z), vector( p3.x-p1.x, p3.y-p1.y, p3.z-p1.z)]
+        points=[]
+        for side in sides:
+            intersect=planeIn.vector_intersect(side,True)
+            if intersect!=False:
+                points+=intersect
+        if points==[]:return False
+        return edge(points[0],points[1])
+        
+        
+        
   
 
 class plane:
@@ -156,7 +182,8 @@ class plane:
         if coords:
             if parameter>=0: return vector_in.origin+(vector_in*parameter)
         elif parameter>=0: return True
-        return False             
+        return False
+        
 
 class mesh:
     #Defines a collection of tris which is ideally a closed surface.
@@ -168,7 +195,7 @@ class mesh:
         xSum = 0
         ySum = 0
         zSum = 0
-        self.xMax=0 #Max and mins on each axis provide useful optimizations. Trades long load times for short operations.
+        self.xMax=0 #Max and mins on each axis provide useful optimizations.
         self.xMin=0
         self.yMax=0
         self.yMin=0
@@ -200,29 +227,3 @@ class mesh:
         print "hits: "+ str(hits)
         if hits%2==1: return True
         return False
-
-
-topfront=point(5,5,5)
-topleft=point(5,0,5)
-topright=point(0,5,5)
-topback=point(0,0,5)
-bottomback=point(0,0,0)
-bottomfront=point(5,5,0)
-bottomleft=point(5,0,0)
-bottomright=point(0,5,0)
-
-top1=tri([topfront,topleft,topright])
-top2=tri([topback,topleft,topright])
-fleft1=tri([topfront,topleft,bottomleft])
-fleft2=tri([topfront,bottomleft,bottomfront])
-fright1=tri([topfront,topright,bottomright])
-fright2=tri([topfront,bottomright,bottomfront])
-bot1=tri([bottomfront,bottomleft,bottomright])
-bot2=tri([bottomback,bottomleft,bottomright])
-bleft1=tri([topleft,topback,bottomback])
-bleft2=tri([topleft,bottomleft,bottomback])
-bright1=tri([topright,topback,bottomback])
-bright2=tri([topright,bottomright,bottomback])
-
-cube = mesh([top1,top2,fleft1,fleft2,fright1,fright2,bot1,bot2,bleft1,bleft2,bright1,bright2])
-pointB=point(2,2,2)
