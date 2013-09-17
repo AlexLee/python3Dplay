@@ -71,8 +71,19 @@
 ##        #Implements dot product operations on self and another vector.
 ##        return self.x*other.x+self.y*other.y+self.z*other.z
 
+import scipy as sp
 import numpy as np
 import math
+
+#Points are 3x1 matrices, vectors are 3x2. Row 2 of vectors are their origin points.
+
+
+def unit(vector):
+    #Takes a vector and returns its unit vector with origin preserved.
+    if vector.shape==(2, 3):
+        return sp.array([vector[0]/sp.sqrt(vector[0].dot(vector[0])),vector[1]])
+    elif vector.shape==(3,): return sp.array([vector/sp.sqrt(vector.dot(vector))])
+    
 
 class edge:
     #Stores a pair of points and defines a connection between them.
@@ -81,49 +92,39 @@ class edge:
         self.b=b
     def length(self):
         #Returns the length of the edge.
-        subtrArray = np.dstack([self.a,-self.b]).sum(2)
-        return math.sqrt(np.sum([n**2 for n in subtrArray]))
-                
+        subtrArray = sp.dstack([self.a,-self.b]).sum(2)
+        return sp.sqrt(sp.sum([n**2 for n in subtrArray]))
     def parallel(self,other):
         #Checks if self is parallel to another edge other. Returns a boolean.
         return self.getDir()==other.getDir()
     def getDir(self):
-        #Returns a positive unit vector, a to b or b to a.
-        x = abs(self.b.x - self.a.x)
-        y = abs(self.b.y - self.a.y)
-        z = abs(self.b.z - self.a.z)
-        return vector(x,y,z).unit()
+        #Returns a positive unit vector, a to b or b to a. x/(x dot x)^0.5 produces the unit vector of x.
+        d=sp.array([abs(self.b[0] - self.a[0]),abs(self.b[1] - self.a[1]),abs(self.b[2] - self.a[2])])
+        
+        return sp.array([unit(d),[0,0,0]])
         
         
     
 class tri:
-    #Stores a triangle. Normal is defined as a vector aka a 1x3 array. Triangle is formed from an ordered list of 3 connected points aka 1x3 arrays.
+    #Stores a triangle. Normal is defined as a vector aka a 3x2 array. Triangle is formed from an ordered list of 3 connected points aka 3x1 arrays.
     def __init__(self,points,normal=None):
         #Normal should be a single vector. Points should be a list of points.
-        self.points = points
+        self.points = sp.array(points)
         if normal !=None:
-            self.normal = normal.unit() #Normals don't need to be anything other than unit vectors.
+            self.normal = unit(normal)
         else:
-            p1 = points[0]
-            p2 = points[1]
-            p3 = points[2]
-            va = vector(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z)
-            vb = vector(p1.x-p3.x,p1.y-p3.y,p1.z-p3.z)
-            value = va.cross(vb)
-            self.normal = value.unit()
+            va = sp.array([ self.points[0][0]-self.points[1][0], self.points[0][1]-self.points[1][1], self.points[0][2]-self.points[1][2]])
+            vb = sp.array([ self.points[0][0]-self.points[2][0], self.points[0][1]-self.points[2][1], self.points[0][2]-self.points[2][2]])
+            value = unit(sp.array([np.cross(va,vb),[0,0,0]]))
+            self.normal = value
         self.plane = plane(self.points[0],self.normal)
-        self.edges = []
         #Create edges through the list of points. the first edge goes from self.points[0] to self.points[1] and the last from self.points[-1] to self.points[0]
-        pointA = self.points[0]
-        iteratingPoints = self.points[1:]
-        iteratingPoints.append(self.points[0])
-        for point in iteratingPoints:
-            pointB = point
-            self.edges.append(edge(pointA,pointB))
-            pointA = point
-        
+        self.edges = []
+        for i in range(3):
+            #Very silly and intentionally pythonic way to do this.
+            self.edges.append(edge(self.points[i],self.points[i-2]))        
     def __str__(self):
-        return str(self.p1) + " , " + str(self.p2) + " , " + str(self.p3)
+        return str(self.points[0]) + " , " + str(self.points[1]) + " , " + str(self.points[2])
     def perimeter(self):
         #Return the perimeter of the facet
         perim = 0
@@ -140,52 +141,61 @@ class tri:
     def vector_intersect(self,vector_in,coords=False):
         #Checks if the vector intersects self.plane, then tests whether the point is inside tri. Coords decides whether a boolean or a point object is returned.
         intersect = self.plane.vector_intersect(vector_in,True)
-        if not intersect: return False
+        print intersect
+        if type(intersect)==type(False): return False
         else:
             #point is inside tri iff ABxAP.unit==BCxBP.unit==CAxCP.unit
+            #Defining points just to make it neater. 
             p1 = self.points[0]
             p2 = self.points[1]
             p3 = self.points[2]
-            AB=vector( p1.x-p2.x, p1.y-p2.y, p1.z-p2.z)
-            BC=vector( p2.x-p3.x, p2.y-p3.y, p2.z-p3.z)
-            CA=vector( p3.x-p1.x, p3.y-p1.y, p3.z-p1.z)
-            AP=vector( p1.x-intersect.x, p1.y-intersect.y, p1.z-intersect.z)
-            BP=vector( p2.x-intersect.x, p2.y-intersect.y, p2.z-intersect.z)
-            CP=vector( p3.x-intersect.x, p3.y-intersect.y, p3.z-intersect.z)
-            c1 = AB.cross(AP).unit()
-            c2 = BC.cross(BP).unit()
-            c3 = CA.cross(CP).unit()
+            #Define the 6 vectors
+            AB=sp.array([ p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]])
+            BC=sp.array([ p2[0]-p3[0], p2[1]-p3[1], p2[2]-p3[2]])
+            CA=sp.array([ p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])
+            AP=sp.array([ p1[0]-intersect[0], p1[1]-intersect[1], p1[2]-intersect[2]])
+            BP=sp.array([ p2[0]-intersect[0], p2[1]-intersect[1], p2[2]-intersect[2]])
+            CP=sp.array([ p3[0]-intersect[0], p3[1]-intersect[1], p3[2]-intersect[2]])
+            #Find cross products
+            c1 = unit(sp.cross(AB,AP))
+            c2 = unit(sp.cross(BC,BP))
+            c3 = unit(sp.cross(CA,CP))
             if not coords: return c1==c2==c3
             else: return intersect
-    def plane_intersect(self,planeIn):
-        #Returns an edge in both plane p and self. A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
+    def plane_intersect(self,p):
+        #Returns an edge in both plane p and self or boolean False if edge DNE.
+        #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
         p1 = self.points[0]
         p2 = self.points[1]
         p3 = self.points[2]
-        sides=[vector( p1.x-p2.x, p1.y-p2.y, p1.z-p2.z), vector( p2.x-p3.x, p2.y-p3.y, p2.z-p3.z), vector( p3.x-p1.x, p3.y-p1.y, p3.z-p1.z)]
+        #Transforming the 3 sides into vectors for testing against the plane
+        sides=[sp.array([ p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]]), sp.array([ p2[0]-p3[0], p2[1]-p3[1], p2[2]-p3[2]]), sp.array([ p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])]
         points=[]
         for side in sides:
-            intersect=planeIn.vector_intersect(side,True)
+            intersect=p.vector_intersect(side,True)
             if intersect!=False:
                 points+=intersect
         if points==[]:return False
         return edge(points[0],points[1])
         
-        
-        
-  
+
+
 
 class plane:
     #Defines a plane from a point and a normal.
     def __init__(self,point,normal):
         self.origin = point
-        self.normal = normal.unit()
-    def vector_intersect(self,vector_in,coords=False):
-        #Tests whether a vector intersects 
-        if self.normal.dot(vector_in)==0: return False
-        parameter = self.normal.dot(self.origin-vector_in.origin)/self.normal.dot(vector_in)
+        self.normal = unit(normal)
+    def vector_intersect(self,v,coords=False):
+        #Tests whether a vector v hits self
+        if self.normal[0].dot(v[0])==0: return False
+        #dot product includes cos(angle between 2 vectors) therefore if the angle between 2 vectors is >90 dot product is negative. So a negative dot-prod signals an obtuse angle between 2 vectors.
+        #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, so we use self.origin-v[1] as
+        #a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
+        #I still haven't wrapped my head around how the parameter is also the scalar multiple necessary to make v reach the plane.
+        parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
         if coords:
-            if parameter>=0: return vector_in.origin+(vector_in*parameter)
+            if parameter>=0: return v[1]+(v[0]*parameter)
         elif parameter>=0: return True
         return False
         
@@ -232,3 +242,10 @@ class mesh:
         print "hits: "+ str(hits)
         if hits%2==1: return True
         return False
+
+
+
+
+
+t1 = tri([sp.array([0,0,0]),sp.array([0,3,0]),sp.array([4,0,0])])
+v1 = sp.array([[0,0,5],[0,0,-2]])
