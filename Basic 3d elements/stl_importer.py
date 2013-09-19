@@ -1,5 +1,9 @@
 #The error reports in this are extremely hackish so far. I'll implement actual error classes if this gets built into something bigger. If this comment makes it into something bigger, make fun of me for it.
 
+import scipy as sp
+import numpy as np
+import math
+
 from Basics import *
 
 def stl_import(fileName):
@@ -14,6 +18,8 @@ def stl_import(fileName):
     for line in stl:
         #Terminating a tri resets currentPoints, currentNormal, and stores the tri in currentTris
         lineList = line.split()
+        if lineList[0]=='outer': continue #I don't understand why loops exist.
+        if lineList[0]=='endloop':continue #I don't understand why loops exist.
         if lineList[0]=='endfacet':
             if not inTri:
                 print "Error: endfacet found outside of tri."
@@ -23,7 +29,6 @@ def stl_import(fileName):
             currentNormal=[]
             inTri=False
             continue
-        if lineList[0]=='endloop':continue #I don't understand why loops exist.
         #Ending a mesh
         if lineList[0]=='endsolid':
             if not inMesh:
@@ -45,15 +50,14 @@ def stl_import(fileName):
                 print "Error: facet initiated inside another facet."
                 return
             inTri=True
-            currentNormal=vector(lineList[2],lineList[3],lineList[4])
+            currentNormal=sp.array([[float(lineList[2]),float(lineList[3]),float(lineList[4])],[0,0,0]])
             continue
-        if lineList[0]=='outer': continue #I don't understand why loops exist.
         #Put vertices into currentPoints list
         if lineList[0]=='vertex':
             if len(currentPoints)>2:
                 print "Error, nontriangle facet in file."
                 return
-            currentPoints.append(point(lineList[1],lineList[2],lineList[3]))
+            currentPoints.append(sp.array([float(lineList[1]),float(lineList[2]),float(lineList[3])]))
             continue
     if output!=None:
         return output
@@ -62,6 +66,7 @@ def stl_import(fileName):
         return
 
 
-testPoint = point(8,8,8)
-testVector = vector(0,0,50,testPoint)
+testPoint = sp.array([8,8,8])
+testVector = sp.array([[0,0,50],testPoint])
+outPont = sp.array([-10,0,0])
             
