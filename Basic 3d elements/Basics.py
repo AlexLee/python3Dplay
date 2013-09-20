@@ -11,6 +11,9 @@ def unit(vector):
     if vector.shape==(2, 3):
         return sp.array([vector[0]/sp.sqrt(vector[0].dot(vector[0])),vector[1]])
     elif vector.shape==(3,): return sp.array([vector/sp.sqrt(vector.dot(vector))])
+def distance(a,b):
+    #Returns the distrance from point a to point b
+    return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)
     
 
 class edge:
@@ -26,9 +29,9 @@ class edge:
         #Checks if self is parallel to another edge other. Returns a boolean.
         return self.getDir()==other.getDir()
     def getDir(self):
-        #Returns a positive unit vector, a to b or b to a. x/(x dot x)^0.5 produces the unit vector of x.
-        d=sp.array([abs(self.b[0] - self.a[0]),abs(self.b[1] - self.a[1]),abs(self.b[2] - self.a[2])])
-        return sp.array([unit(d),[0,0,0]])
+        #Returns a unit vector, a to b.
+        d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
+        return sp.vstack((unit(d),[0,0,0]))
         
         
     
@@ -87,6 +90,11 @@ class tri:
             c3 = unit(sp.cross(CA,CP))
             if not coords: return np.array_equal(c1,c2) and np.array_equal(c1,c3)
             else: return intersect
+    def edge_intersect(self,e):
+        #Returns whether an edge hits self.
+        intersect = self.vector_intersect(e.getDir(),True)
+        if type(intersect)==type(False): return False
+        return distance(intersect,e.a)<=e.length()
     def plane_intersect(self,p):
         #Returns an edge in both plane p and self or boolean False if edge DNE.
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
@@ -168,3 +176,14 @@ class mesh:
             if tri.vector_intersect(testVector): hits+=1
         if hits%2==1: return True
         return False
+    def edge_intersect(self,e):
+        #Checks if edge e collides with any triangles in self.
+        for tri in self.tris:
+            if tri.edge_intersect(e): return True
+        return False
+
+
+
+e1 = edge(sp.array([0,0,0]),sp.array([0,0,5]))
+t1=tri([sp.array([1,1,1]),sp.array([-1,1,1]),sp.array([0,-1,1])])
+e2 = edge(sp.array([0,0,0]),sp.array([0,0,-1]))
