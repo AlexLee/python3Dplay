@@ -10,7 +10,8 @@ def unit(vector):
     #Takes a vector and returns its unit vector with origin preserved.
     if vector.shape==(2, 3):
         return sp.array([vector[0]/sp.sqrt(vector[0].dot(vector[0])),vector[1]])
-    elif vector.shape==(3,): return sp.array([vector/sp.sqrt(vector.dot(vector))])
+    elif vector.shape==(3,):
+        return sp.array([vector/sp.sqrt(vector.dot(vector))])
 def distance(a,b):
     #Returns the distrance from point a to point b
     return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)
@@ -31,6 +32,7 @@ class edge:
     def getDir(self):
         #Returns a unit vector, a to b.
         d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
+        print d
         return sp.vstack((unit(d),[0,0,0]))
         
         

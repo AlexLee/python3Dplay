@@ -75,7 +75,7 @@ class boxRegion:
                 if self.contains(edge.a):
                     self.edges.append(edge)
                     self.solid=False
-                elif self.box.edge_intersect(e):
+                elif self.box.edge_intersect(edge):
                     self.edges.append(edge)
                     self.solid=False
         else:
@@ -94,18 +94,34 @@ class boxRegion:
         elif self.inside != None: return self.inside
         else:
             return m.contains(self.senter)
+    def split(self,axis):
+        #Split along the given axis.
+        if axis==0:
+            xMid = (self.xMax+self.xMin)/2
+            childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, xMid, self.yMax, self.zMax, self.depth+1, self.maxDepth)
+            childB = boxRegion(self.mesh, xMid, self.yMin, self.zMin, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
+        if axis==1:
+            yMid = (self.yMax+self.yMin)/2
+            childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, self.xMax, yMid, self.zMax, self.depth+1, self.maxDepth)
+            childB = boxRegion(self.mesh, self.xMin, yMid, self.zMin, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
+        if axis==2:
+            zMid = (self.zMax+self.zMin)/2
+            childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, self.xMax, self.yMax, zMid, self.depth+1, self.maxDepth)
+            childB = boxRegion(self.mesh, self.xMin, self.yMin, zMid, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
+        self.children=[childA,childB]
     def tesselate(self):
         #Splits all nonsolid regions which do not yet have children. Effectively makes the tree one level deeper. Will not exceed maxdepth.
         self.checkEdges(self.mesh)
         if not self.solid:
             if self.depth<self.maxDepth:
                 if self.children==[]:
-                    xMid = (self.xMax+self.xMin)/2
-                    yMid = (self.yMax+self.yMin)/2
-                    zMid = (self.zMax+self.zMin)/2
-                    childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, xMid, yMid, zMid, self.depth+1, self.maxDepth)
-                    childB = boxRegion(self.mesh, xMid, yMid, zMid, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
-                    self.children=[childA,childB]
+                    lens = [self.xLen,self.yLen,self.zLen]
+                    if self.xLen==max(lens):
+                        self.split(0)
+                    if self.yLen==max(lens):
+                        self.split(1)
+                    if self.zLen==max(lens):
+                        self.split(2)
                 else:
                     for child in self.children:
                         child.tesselate()
