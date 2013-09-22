@@ -46,54 +46,43 @@ class boxRegion:
         self.zLen = abs(self.zMax-self.zMin)
         self.box = box([xMin,yMin,zMin],[xMax,yMax,zMax]) #Mesh box around boxregion, to be used in checking edges.
         self.center = sp.array([(self.xMax+self.xMin)/2,(self.yMax+self.yMin)/2,(self.zMax+self.zMin)/2])
-        self.edges = [] #This list contains all edges which can or do interact with 
         self.solid = None #This flag states whether the region is homogenous. 
         self.inside = None #This flag states whether the region is inside or outside a mesh.
         self.depth = depth #This counts how many boxRegions self is nested within.
         self.maxDepth = maxDepth
         self.children = []
+
     def __str__(self):
-        return str(self.xMin) + ' ' + str(self.yMin) + ' ' + str(self.zMin) + ' ' + str(self.xMax) + ' ' + str(self.yMax) + ' ' + str(self.zMax)
+        return 'x: ' + str(self.xMin)+'-'+str(self.xMax)+' y: ' + str(self.yMin)+'-'+str(self.yMax)+' z: ' + str(self.zMin)+'-'+str(self.zMax)
+
     def contains(self,p):
         #Checks if point p is within self. This does not change self.solid, self.inside or self.children. Completed.
         return self.xMin<=p[0]<=self.xMax and self.yMin<=p[1]<=self.yMax and self.zMin<=p[2]<=self.zMax
-    def checkPoints(self,m):
-        #Checks if mesh m has any points inside self. Sets self.solid to false if there are any. Completed.
-        for point in m.points:
-            if self.contains(point):
-                self.solid=False
-                return True
         return False
-    def checkEdges(self,m=None):
-        #If m is not None, this function checks m.edges and populates self.edges with any edges that interact with self. Otherwise, it only checks edges in self.edges. This allows child boxes to inherit self.edges and thus
-        #not recheck edges that their parent already eliminated. self.solid is flipped by 
-        if m!= None:
-            self.edges = []
-            output = False
-            for edge in m.edges:
-                #Only 3 cases: Not inside, traverses a side, and wholly inside. Checking one point tests for wholly inside, and the edge_intersect tests whether the edge traverses a side.
-                if self.contains(edge.a):
-                    self.edges.append(edge)
-                    self.solid=False
-                elif self.box.edge_intersect(edge):
-                    self.edges.append(edge)
-                    self.solid=False
-        else:
-            oldEdges = self.edges
-            self.edges = []
-            for edge in oldEdges:
-                if self.contains(edge.a):
-                    self.edges.append(edge)
-                    self.solid=False
-                elif self.box.edge_intersect(e):
-                    self.edges.append(edge)
-                    self.solid=False
-    def checkInside(self,m):
+
+    def checkEdges(self):
+        #This function has been simplified to make sure it doesn't cause any trouble. To be optimized again later by reintroducing self.edges. Checks if the region is anything other than wholly inside or wholly outside self.mesh.
+        for edge in self.mesh.edges:
+            if self.contains(edge.a) or self.contains(edge.b):
+                #One end of the edge is inside therefore an edge is either wholly inside the region or enters the region through a side.
+                self.solid=False
+                return
+            if self.box.edge_intersect(edge):
+                #If we get to this stage, no points are inside. Thus we're only testing for edges that go all the way through the region without ending.
+                self.solid=False
+                return
+        self.solid=True
+        return            
+
+    def isInside(self,m):
         #Returns self.inside unless self.solid is False, in which case it prints for now. Sophisticated error management comes later.
-        if not self.solid: print "Region not homogeneous, unclear if inside or outside."
-        elif self.inside != None: return self.inside
-        else:
-            return m.contains(self.senter)
+        if not self.solid: self.checkEdges()
+        if not self.solid:
+            self.inside = 'Not Homogeneous'
+            return self.inside
+        self.inside = self.mesh.contains(self.center)
+        return self.inside
+
     def split(self,axis):
         #Split along the given axis.
         if axis==0:
@@ -109,23 +98,61 @@ class boxRegion:
             childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, self.xMax, self.yMax, zMid, self.depth+1, self.maxDepth)
             childB = boxRegion(self.mesh, self.xMin, self.yMin, zMid, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
         self.children=[childA,childB]
+
     def tesselate(self):
         #Splits all nonsolid regions which do not yet have children. Effectively makes the tree one level deeper. Will not exceed maxdepth.
-        self.checkEdges(self.mesh)
-        if not self.solid:
-            if self.depth<self.maxDepth:
+        self.checkEdges()
+        if self.depth<self.maxDepth:
+            if not self.solid:
                 if self.children==[]:
                     lens = [self.xLen,self.yLen,self.zLen]
                     if self.xLen==max(lens):
+                        #print "I'm splitting what I think is a solid region along x:" + str(self)
                         self.split(0)
+                        return
                     if self.yLen==max(lens):
+                        #print "I'm splitting what I think is a solid region along y:" + str(self)
                         self.split(1)
+                        return
                     if self.zLen==max(lens):
+                        #print "I'm splitting what I think is a solid region along z:" + str(self)
                         self.split(2)
+                        return
                 else:
                     for child in self.children:
                         child.tesselate()
+            else: print "I didn't split a solid region!" + str(self)
+        else: print "I didn't split because I hit maxdepth!"
+
+    def getBottom(self):
+        #Returns the bottom most region objects in the tree. The sum of these objects will be self.
+        output = []
+        if self.children==[]: return [self]
+        for child in self.children:
+            if child.children==[]: output.append(child)
+            else:
+                for c in child.children:
+                    carrier = c.getBottom()
+                    for i in carrier:
+                        output.append(i)
+        return output
+
+    def volume(self):
+        #returns the volume of the region
+        return self.xLen*self.yLen*self.zLen
+
+    def getRegion(self,p):
+        #Finds the lowest region in the tree which contains p. Returns self if no children containing p exist.
+        if not self.contains(p): return 'point not in region'
+        output = self
+        for c in self.children:
+            if c.contains(p):
+                output = c.getRegion(p)
+        return output
+                
 
 
-testMesh = box([0,0,0],[15,15,15])
-testBox = boxRegion(testMesh,0,0,0,20,20,20)
+MeshA = box([0,0,0],[4,4,4])
+testBox = boxRegion(MeshA,0,0,0,20,20,20,0,6)
+
+

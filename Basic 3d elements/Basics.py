@@ -9,9 +9,9 @@ vk = sp.array([[0,0,1],[0,0,0]])
 def unit(vector):
     #Takes a vector and returns its unit vector with origin preserved.
     if vector.shape==(2, 3):
-        return sp.array([vector[0]/sp.sqrt(vector[0].dot(vector[0])),vector[1]])
+        return sp.array([vector[0]/math.sqrt(vector[0].dot(vector[0])),vector[1]])
     elif vector.shape==(3,):
-        return sp.array([vector/sp.sqrt(vector.dot(vector))])
+        return sp.array([vector/math.sqrt(vector.dot(vector))])
 def distance(a,b):
     #Returns the distrance from point a to point b
     return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)
@@ -32,7 +32,6 @@ class edge:
     def getDir(self):
         #Returns a unit vector, a to b.
         d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
-        print d
         return sp.vstack((unit(d),[0,0,0]))
         
         
@@ -176,8 +175,7 @@ class mesh:
         hits = 0
         for tri in self.tris:
             if tri.vector_intersect(testVector): hits+=1
-        if hits%2==1: return True
-        return False
+        return hits%2==1
     def edge_intersect(self,e):
         #Checks if edge e collides with any triangles in self.
         for tri in self.tris:
@@ -186,6 +184,3 @@ class mesh:
 
 
 
-e1 = edge(sp.array([0,0,0]),sp.array([0,0,5]))
-t1=tri([sp.array([1,1,1]),sp.array([-1,1,1]),sp.array([0,-1,1])])
-e2 = edge(sp.array([0,0,0]),sp.array([0,0,-1]))
