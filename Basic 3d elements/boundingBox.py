@@ -57,7 +57,7 @@ class boxRegion:
 
     def contains(self,p):
         #Checks if point p is within self. This does not change self.solid, self.inside or self.children. Completed.
-        return self.xMin<=p[0]<=self.xMax and self.yMin<=p[1]<=self.yMax and self.zMin<=p[2]<=self.zMax
+        return self.xMin<p[0]<=self.xMax and self.yMin<p[1]<=self.yMax and self.zMin<p[2]<=self.zMax
         return False
 
     def checkEdges(self):
@@ -66,15 +66,17 @@ class boxRegion:
             if self.contains(edge.a) or self.contains(edge.b):
                 #One end of the edge is inside therefore an edge is either wholly inside the region or enters the region through a side.
                 self.solid=False
+                print "There's an end in me!"
                 return
             if self.box.edge_intersect(edge):
                 #If we get to this stage, no points are inside. Thus we're only testing for edges that go all the way through the region without ending.
                 self.solid=False
+                print "An edge hit me somehow!" + str(edge)
                 return
         self.solid=True
         return            
 
-    def isInside(self,m):
+    def isInside(self):
         #Returns self.inside unless self.solid is False, in which case it prints for now. Sophisticated error management comes later.
         if not self.solid: self.checkEdges()
         if not self.solid:
@@ -107,15 +109,15 @@ class boxRegion:
                 if self.children==[]:
                     lens = [self.xLen,self.yLen,self.zLen]
                     if self.xLen==max(lens):
-                        #print "I'm splitting what I think is a solid region along x:" + str(self)
+                        print "I'm splitting what I think is a nonsolid region along x:" + str(self)
                         self.split(0)
                         return
                     if self.yLen==max(lens):
-                        #print "I'm splitting what I think is a solid region along y:" + str(self)
+                        print "I'm splitting what I think is a nonsolid region along y:" + str(self)
                         self.split(1)
                         return
                     if self.zLen==max(lens):
-                        #print "I'm splitting what I think is a solid region along z:" + str(self)
+                        print "I'm splitting what I think is a nonsolid region along z:" + str(self)
                         self.split(2)
                         return
                 else:
@@ -152,7 +154,9 @@ class boxRegion:
                 
 
 
-MeshA = box([0,0,0],[4,4,4])
-testBox = boxRegion(MeshA,0,0,0,20,20,20,0,6)
+MeshA = box([0,0,0],[5,5,5])
+#testBox = boxRegion(MeshA,0,0,0,20,20,20,0,6)
 
+tb = boxRegion(MeshA,3.9,3.9,3.9,4,4,4,0,1)
+tb.checkEdges()
 

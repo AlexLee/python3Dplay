@@ -11,6 +11,7 @@ def unit(vector):
     if vector.shape==(2, 3):
         return sp.array([vector[0]/math.sqrt(vector[0].dot(vector[0])),vector[1]])
     elif vector.shape==(3,):
+        print sp.array([vector/math.sqrt(vector.dot(vector))])
         return sp.array([vector/math.sqrt(vector.dot(vector))])
 def distance(a,b):
     #Returns the distrance from point a to point b
@@ -22,6 +23,8 @@ class edge:
     def __init__(self,a,b):
         self.a=a
         self.b=b
+    def __str__(self):
+        return str(self.a)+str(self.b)
     def length(self):
         #Returns the length of the edge.
         subtrArray = sp.dstack([self.a,-self.b]).sum(2)
@@ -95,7 +98,7 @@ class tri:
         #Returns whether an edge hits self.
         intersect = self.vector_intersect(e.getDir(),True)
         if type(intersect)==type(False): return False
-        return distance(intersect,e.a)<=e.length()
+        return distance(intersect,e.a)<e.length()
     def plane_intersect(self,p):
         #Returns an edge in both plane p and self or boolean False if edge DNE.
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
