@@ -1,4 +1,6 @@
-from Basics import *
+import Basics
+import math
+import scipy as sp
 
 #Completed
 def box(mins,maxes):
@@ -11,25 +13,25 @@ def box(mins,maxes):
     f=sp.array([mins[0],maxes[1],maxes[2]])
     g=sp.array([maxes[0],maxes[1],maxes[2]])
     h=sp.array([maxes[0],mins[1],maxes[2]])
-    return mesh([
+    return Basics.mesh([
         #Bottom
-        tri([a,b,c]),
-        tri([a,d,c]),            
+        Basics.tri([a,b,c]),
+        Basics.tri([a,d,c]),            
         #Top
-        tri([e,f,g]),
-        tri([e,h,g]),
+        Basics.tri([e,f,g]),
+        Basics.tri([e,h,g]),
         #Front Left
-        tri([d,c,g]),
-        tri([d,h,g]),
+        Basics.tri([d,c,g]),
+        Basics.tri([d,h,g]),
         #Front Right
-        tri([b,c,g]),
-        tri([b,f,g]),
+        Basics.tri([b,c,g]),
+        Basics.tri([b,f,g]),
         #Back Left
-        tri([a,d,h]),
-        tri([a,e,h]),
+        Basics.tri([a,d,h]),
+        Basics.tri([a,e,h]),
         #Back Right
-        tri([a,b,f]),
-        tri([a,e,f])])
+        Basics.tri([a,b,f]),
+        Basics.tri([a,e,f])])
 
 class boxRegion:
     #A bounding box object meant to nest within itself to quickly define large regions as inside or outside a mesh. 
@@ -66,17 +68,15 @@ class boxRegion:
             if self.contains(edge.a) or self.contains(edge.b):
                 #One end of the edge is inside therefore an edge is either wholly inside the region or enters the region through a side.
                 self.solid=False
-                print "There's an end in me!"
                 return
             if self.box.edge_intersect(edge):
                 #If we get to this stage, no points are inside. Thus we're only testing for edges that go all the way through the region without ending.
                 self.solid=False
-                print "An edge hit me somehow!" + str(edge)
                 return
         self.solid=True
         return            
 
-    def isInside(self):
+    def checkInside(self):
         #Returns self.inside unless self.solid is False, in which case it prints for now. Sophisticated error management comes later.
         if not self.solid: self.checkEdges()
         if not self.solid:
@@ -87,15 +87,26 @@ class boxRegion:
 
     def split(self,axis):
         #Split along the given axis.
-        if axis==0:
+        if axis=='major':
+            lens = [self.xLen,self.yLen,self.zLen]
+            if self.xLen==max(lens):                
+                    self.split(0)
+                    return
+            if self.yLen==max(lens):
+                    self.split(1)
+                    return
+            if self.zLen==max(lens):
+                    self.split(2)
+                    return
+        elif axis==0:
             xMid = (self.xMax+self.xMin)/2
             childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, xMid, self.yMax, self.zMax, self.depth+1, self.maxDepth)
             childB = boxRegion(self.mesh, xMid, self.yMin, self.zMin, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
-        if axis==1:
+        elif axis==1:
             yMid = (self.yMax+self.yMin)/2
             childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, self.xMax, yMid, self.zMax, self.depth+1, self.maxDepth)
             childB = boxRegion(self.mesh, self.xMin, yMid, self.zMin, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
-        if axis==2:
+        elif axis==2:
             zMid = (self.zMax+self.zMin)/2
             childA = boxRegion(self.mesh, self.xMin, self.yMin, self.zMin, self.xMax, self.yMax, zMid, self.depth+1, self.maxDepth)
             childB = boxRegion(self.mesh, self.xMin, self.yMin, zMid, self.xMax, self.yMax, self.zMax, self.depth+1, self.maxDepth)
@@ -107,24 +118,10 @@ class boxRegion:
         if self.depth<self.maxDepth:
             if not self.solid:
                 if self.children==[]:
-                    lens = [self.xLen,self.yLen,self.zLen]
-                    if self.xLen==max(lens):
-                        print "I'm splitting what I think is a nonsolid region along x:" + str(self)
-                        self.split(0)
-                        return
-                    if self.yLen==max(lens):
-                        print "I'm splitting what I think is a nonsolid region along y:" + str(self)
-                        self.split(1)
-                        return
-                    if self.zLen==max(lens):
-                        print "I'm splitting what I think is a nonsolid region along z:" + str(self)
-                        self.split(2)
-                        return
+                    self.split('major') #Split along the longest axis.
                 else:
                     for child in self.children:
                         child.tesselate()
-            else: print "I didn't split a solid region!" + str(self)
-        else: print "I didn't split because I hit maxdepth!"
 
     def getBottom(self):
         #Returns the bottom most region objects in the tree. The sum of these objects will be self.
@@ -138,6 +135,19 @@ class boxRegion:
                     for i in carrier:
                         output.append(i)
         return output
+
+    def completeTree(self):
+        for i in range(self.maxDepth):
+            self.tesselate()
+        if self.children==[]:
+            self.checkInside()
+            return
+        for child in self.children:
+            if child.children==[]:
+                child.checkInside()
+            else:
+                child.completeTree()
+        
 
     def volume(self):
         #returns the volume of the region
@@ -157,6 +167,6 @@ class boxRegion:
 MeshA = box([0,0,0],[5,5,5])
 #testBox = boxRegion(MeshA,0,0,0,20,20,20,0,6)
 
-tb = boxRegion(MeshA,3.9,3.9,3.9,4,4,4,0,1)
-tb.checkEdges()
+tb = boxRegion(MeshA,0,0,0,20,20,20,0,6)
+tb.completeTree()
 

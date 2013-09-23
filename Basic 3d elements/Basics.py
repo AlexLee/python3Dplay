@@ -11,12 +11,12 @@ def unit(vector):
     if vector.shape==(2, 3):
         return sp.array([vector[0]/math.sqrt(vector[0].dot(vector[0])),vector[1]])
     elif vector.shape==(3,):
-        print sp.array([vector/math.sqrt(vector.dot(vector))])
-        return sp.array([vector/math.sqrt(vector.dot(vector))])
+        dot = vector.dot(vector)
+        if dot==0: return vector
+        return vector/math.sqrt(dot)
 def distance(a,b):
     #Returns the distrance from point a to point b
-    return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)
-    
+    return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)    
 
 class edge:
     #Stores a pair of points and defines a connection between them.
@@ -93,7 +93,9 @@ class tri:
             c2 = unit(sp.cross(BC,BP))
             c3 = unit(sp.cross(CA,CP))
             if not coords: return np.array_equal(c1,c2) and np.array_equal(c1,c3)
-            else: return intersect
+            elif np.array_equal(c1,c2) and np.array_equal(c1,c3):
+                return intersect
+            return False
     def edge_intersect(self,e):
         #Returns whether an edge hits self.
         intersect = self.vector_intersect(e.getDir(),True)
