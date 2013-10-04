@@ -40,6 +40,9 @@ class edge:
         #Returns a unit vector, a to b.
         d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
         return sp.vstack((unit(d),[0,0,0]))
+    def containsPoint(p):
+        #Checks if p is on edge
+        return distance(p,self.a)+distance(p,self.b)==self.length()
     def colinear(self,e):
         #Returns boolean whether self is colinear with e
         if not self.parallel(e): return False
@@ -91,7 +94,9 @@ class edge:
         else: return False
         if max(distance(point,self.a),distance(point,self.b))>self.length() or max(distance(point,e.a),distance(point,e.b))>e.length():
             return False
-        else: return point
+        else:
+            if coords: return point
+            else: return True
             
         
     
@@ -132,7 +137,13 @@ class tri:
         intersect = self.plane.vector_intersect(vector_in,True)
         if type(intersect)==type(False): return False
         else:
-            #point is inside tri iff ABxAP.unit==BCxBP.unit==CAxCP.unit
+            if self.contains(intersect):
+                if coords: return intersect
+                return True
+            return False
+    def contains(self,p):
+        #Checks whether a point is on self.
+        #point is inside tri iff ABxAP.unit==BCxBP.unit==CAxCP.unit
             #Defining points just to make it neater. 
             p1 = self.points[0]
             p2 = self.points[1]
@@ -141,17 +152,15 @@ class tri:
             AB=sp.array([ p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]])
             BC=sp.array([ p2[0]-p3[0], p2[1]-p3[1], p2[2]-p3[2]])
             CA=sp.array([ p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])
-            AP=sp.array([ p1[0]-intersect[0], p1[1]-intersect[1], p1[2]-intersect[2]])
-            BP=sp.array([ p2[0]-intersect[0], p2[1]-intersect[1], p2[2]-intersect[2]])
-            CP=sp.array([ p3[0]-intersect[0], p3[1]-intersect[1], p3[2]-intersect[2]])
+            AP=sp.array([ p1[0]-p[0], p1[1]-p[1], p1[2]-p[2]])
+            BP=sp.array([ p2[0]-p[0], p2[1]-p[1], p2[2]-p[2]])
+            CP=sp.array([ p3[0]-p[0], p3[1]-p[1], p3[2]-p[2]])
             #Find cross products
             c1 = unit(sp.cross(AB,AP))
             c2 = unit(sp.cross(BC,BP))
             c3 = unit(sp.cross(CA,CP))
-            if not coords: return np.array_equal(c1,c2) and np.array_equal(c1,c3)
-            elif np.array_equal(c1,c2) and np.array_equal(c1,c3):
-                return intersect
-            return False
+            return np.array_equal(c1,c2) and np.array_equal(c1,c3)
+        
     def edge_intersect(self,e):
         #Returns whether an edge hits self.
         intersect = self.vector_intersect(e.getDir(),True)
@@ -172,7 +181,31 @@ class tri:
                 points+=intersect
         if points==[]:return False
         return edge(points[0],points[1])
-        
+    def tri_intersect(self,t):
+        #Returns an edge in both self and t.
+        pEdge = plane_intersect(t.plane)
+        intersects = []
+        for edge in t.edges:
+            if pEdge.intersects(edge,False):
+                intersects.append(pEdge.intersects(edge,True))
+        if len(intersects)==0:
+            #If there are no intersections between the edges of tri and the edge formed by the plane intersect, the original plane intersect is on the surface of tri and therefore equivalent to
+            #tri intersect.
+            return pEdge
+        if len(intersects)==1:
+            #If there is 1 intersection, one end of pEdge will still be in tri. So we check if pEdge.a is in tri, and if it is return an edge from it to the 1 intersect. Otherwise we do the same to B
+            point  = intersects[0]
+            if self.contains(pEdge.a):
+                return edge(pEdge.a,point)
+            return edge(pEdge.b,point)
+        if len(intersects)==2:
+            #If there are 2 intersections, pEdge.a and pEdge.b both lie outside Tri, and the intersection of the triangles goes from one edge of t to the other. Thus it is the edge from one intersect
+            #to the other
+            return edge(intersects[0],intersects[1])
+            
+            
+                
+            
 
 
 
