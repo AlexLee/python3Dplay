@@ -74,7 +74,20 @@ class boxRegion:
                 self.solid=False
                 return
         self.solid=True
-        return            
+        return
+    def checkTri(self,t):
+        #This function checks if a triangle in any way interacts with the region.
+        for point in tri.points:
+            if self.contains(point):return True
+        for edge in tri.edges:
+            if self.box.edge_intersect(edge): return True
+        return False
+    def pointInside(self,p):
+        #Check if point p is inside self.mesh
+        r = self.getRegion(p)
+        
+        if r.inside!=None: return r.inside
+        else: return r.checkInside()
 
     def checkInside(self):
         #Returns self.inside unless self.solid is False, in which case it prints for now. Sophisticated error management comes later.

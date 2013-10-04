@@ -15,28 +15,84 @@ def unit(vector):
         if dot==0: return vector
         return vector/math.sqrt(dot)
 def distance(a,b):
-    #Returns the distrance from point a to point b
-    return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)    
+    #Returns the distance from point a to point b
+    return math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2)
 
 class edge:
     #Stores a pair of points and defines a connection between them.
     def __init__(self,a,b):
         self.a=a
         self.b=b
+        self.vector = self.getDir()
     def __str__(self):
         return str(self.a)+str(self.b)
     def length(self):
         #Returns the length of the edge.
         subtrArray = sp.dstack([self.a,-self.b]).sum(2)
         return sp.sqrt(sp.sum([n**2 for n in subtrArray]))
-    def parallel(self,other):
-        #Checks if self is parallel to another edge other. Returns a boolean.
-        return self.getDir()==other.getDir()
+    def parallel(self,e):
+        #Checks if self is parallel to another edge e. Returns a boolean.
+        d1 = self.getDir()
+        d2 = e.getDir()
+        c=np.cross(d1,d2)
+        return c[0][0]**2 + c[0][1]**2 + c[0][2]**2==0
     def getDir(self):
         #Returns a unit vector, a to b.
         d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
         return sp.vstack((unit(d),[0,0,0]))
-        
+    def colinear(self,e):
+        #Returns boolean whether self is colinear with e
+        if not self.parallel(e): return False
+        scalarX=None
+        scalarY=None
+        scalarZ=None
+        if self.vector[0][0]!=0:
+            scalarX = (e.a[0]-self.a[0])/self.vector[0][0]
+        if self.vector[0][1]!=0:
+            scalarY = (e.a[1]-self.a[1])/self.vector[0][1]
+        if self.vector[0][2]!=0:
+            scalarZ = (e.a[2]-self.a[2])/self.vector[0][2]
+        prev=None
+        for s in (scalarX,scalarY,scalarZ):
+            if s!=None:
+                if prev==None:
+                    prev=s
+                else:
+                    if prev!=s:
+                        return False
+                    prev=s
+        return True
+    def intersect(self,e,coords=True):
+        #Returns the point of intersection of self with another edge, or false if it doesn't intersect.
+        if self.length()==0 or e.length()==0: return 'Error 0 length edge'
+        if self.parallel(e):
+            if not self.colinear(e):
+                return False
+            else:
+                AC = distance(self.a,e.a)
+                AD = distance(self.a,e.b)
+                BC = distance(self.b,e.a)
+                BD = distance(self.b,e.b)
+                if AC==0 or AD ==0: return self.a
+                if BC==0 or BD==0: return self.b
+                for d in (AC,AD,BC,BD):
+                    for c in (AC,AD,BC,BD):
+                        if d+c in (AC,AD,BC,BD):
+                            return 'coincident along a segment'
+                return False
+        p1 = self.a
+        p2 = e.a
+        v1 = self.vector
+        v2 = e.vector
+        s=(p1[1]-p2[1]+v1[0][1]*(p1[2]+p2[2])/v1[0][2])/(v2[0][1]-v1[0][1]*v2[0][2]/v1[0][2])
+        t = (p2[2]+v2[0][2]*s-p1[2])/v1[0][2]
+        if p1[0]+v1[0][0]*t==p2[0]+v2[0][0]*s:
+            point = p1+v1[0]*t
+        else: return False
+        if max(distance(point,self.a),distance(point,self.b))>self.length() or max(distance(point,e.a),distance(point,e.b))>e.length():
+            return False
+        else: return point
+            
         
     
 class tri:
