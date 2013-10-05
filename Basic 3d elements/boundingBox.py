@@ -184,12 +184,3 @@ class boxRegion:
         #Runs completeTree then triSort.
         self.completeTree
         self.triSort
-                    
-
-
-##MeshA = box([0,0,0],[5,5,5])
-###testBox = boxRegion(MeshA,0,0,0,20,20,20,0,6)
-##
-##tb = boxRegion(MeshA,0,0,0,20,20,20,0,6)
-##tb.completeTree()
-

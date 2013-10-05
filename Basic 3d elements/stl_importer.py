@@ -35,7 +35,7 @@ def stl_import(fileName):
                 print "Error: endsolid found outside of mesh."
                 return
             inMesh=False
-            output=mesh(currentTris)
+            output=closedMesh(currentTris)
             continue
         #Initiating a new mesh
         if lineList[0]=='solid':
@@ -65,8 +65,4 @@ def stl_import(fileName):
         print "Error: endsolid not found!"
         return
 
-
-testPoint = sp.array([8,8,8])
-testVector = sp.array([[0,0,50],testPoint])
-outPont = sp.array([-10,0,0])
             

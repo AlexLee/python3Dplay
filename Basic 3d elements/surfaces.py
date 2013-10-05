@@ -36,10 +36,23 @@ class mesh:
         pointCount = len(self.points)
         self.center = sp.array([xSum/pointCount,ySum/pointCount,zSum/pointCount]) #Center of all points in the mesh, useful for some optimizations.
         self.tree = None
+        self.formRegions()
     def formRegions(self):
         self.tree = boxRegion(self,self.xMin,self.xMax,self.yMin,self.yMax,self.zMin,self.zMax,0,6)
         self.tree.finalize(self)
 
+def splitTri(tri,mesh):
+    #tri is a tri, mesh is a closedMesh. Function returns a list of triangles which together compose the entire area of tri inside of mesh.
+    regions = []
+    for point in tri.points:
+        regions.append(mesh.getRegion(point))
+    intersects = []
+    for region in regions:
+        for regionTri in region.tris:
+            intersects.append(tri.tri_intersect(regionTri))
+
+#THIS IS NOT FINISHED. I need to figure out how to make the tri with intersection lines on it into several tris inside the mesh.
+        
 class openMesh(mesh):
     #Defines a collection of tris which is an open surface.
     def __init__(self,tris):
@@ -56,7 +69,8 @@ class openMesh(mesh):
         for tri in self.tris:
             if tri.edge_intersect(e): return True
         return False
-    
+    def occlude(self,mesh):
+        #removes all portions of the the surface not inside mesh.
 
 class closedMesh(mesh):
     #Defines a collection of tris which is a closed surface.
