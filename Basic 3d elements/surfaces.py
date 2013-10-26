@@ -20,7 +20,12 @@ class mesh:
         self.yMin=0
         self.zMax=0
         self.zMin=0
-        xSum = 0 #Sums are used to calculate center
+        self.center = None
+        self.updateLims()
+        self.tree = None
+        self.formRegions()
+    def updateLims(self):
+        xSum = 0 
         ySum = 0
         zSum = 0
         for pointA in self.points:
@@ -35,28 +40,27 @@ class mesh:
             self.zMin=float(min(self.zMin,pointA[2]))            
         pointCount = len(self.points)
         self.center = sp.array([xSum/pointCount,ySum/pointCount,zSum/pointCount]) #Center of all points in the mesh, useful for some optimizations.
-        self.tree = None
-        self.formRegions()
     def formRegions(self):
         self.tree = boxRegion(self,self.xMin,self.xMax,self.yMin,self.yMax,self.zMin,self.zMax,0,6)
         self.tree.finalize(self)
-
-def splitTri(tri,mesh):
-    #tri is a tri, mesh is a closedMesh. Function returns a list of triangles which together compose the entire area of tri inside of mesh.
-    regions = []
-    for point in tri.points:
-        regions.append(mesh.getRegion(point))
-    intersects = []
-    for region in regions:
-        for regionTri in region.tris:
-            intersects.append(tri.tri_intersect(regionTri))
-
-#THIS IS NOT FINISHED. I need to figure out how to make the tri with intersection lines on it into several tris inside the mesh.
-        
+    def vector_intersect(self,v):
+        for tri in self.tris:
+            if tri.vector_intersect(v):
+                return tri.vector_intersect(v,True)
+        return False
+    def edge_intersect(self,e):
+        #Checks if edge e collides with any triangles in self.
+        for tri in self.tris:
+            if tri.edge_intersect(e): return True
+        return False
 class openMesh(mesh):
     #Defines a collection of tris which is an open surface.
     def __init__(self,tris):
         mesh.__init__(self,tris)
+    def zero(self):
+        #This function moves the mesh so that zMin is 0.
+        for tri in self.tris:
+            tri.move(sp.array([[0,0,self.zMin][0,0,0]]))
     def above(self,p):
         #Checks if point p is below the surface
         if p[0]<self.zMin: return True
@@ -64,14 +68,6 @@ class openMesh(mesh):
         for tri in self.tris:
             if tri.vector_intersect(testVector): return True
         return False
-    def edge_intersect(self,e):
-        #Checks if edge e collides with any triangles in self.
-        for tri in self.tris:
-            if tri.edge_intersect(e): return True
-        return False
-    def occlude(self,mesh):
-        #removes all portions of the the surface not inside mesh.
-
 class closedMesh(mesh):
     #Defines a collection of tris which is a closed surface.
     def __init__(self,tris):
@@ -86,9 +82,4 @@ class closedMesh(mesh):
         for tri in self.tris:
             if tri.vector_intersect(testVector): hits+=1
         return hits%2==1
-    def edge_intersect(self,e):
-        #Checks if edge e collides with any triangles in self.
-        for tri in self.tris:
-            if tri.edge_intersect(e): return True
-        return False
         

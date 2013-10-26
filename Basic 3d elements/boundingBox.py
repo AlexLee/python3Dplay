@@ -13,7 +13,7 @@ def box(mins,maxes):
     f=sp.array([mins[0],maxes[1],maxes[2]])
     g=sp.array([maxes[0],maxes[1],maxes[2]])
     h=sp.array([maxes[0],mins[1],maxes[2]])
-    return Basics.closedMesh([
+    return surfaces.closedMesh([
         #Bottom
         Basics.tri([a,b,c]),
         Basics.tri([a,d,c]),            

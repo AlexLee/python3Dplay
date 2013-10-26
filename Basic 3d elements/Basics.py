@@ -38,6 +38,10 @@ class edge:
         d2 = e.getDir()
         c=np.cross(d1,d2)
         return c[0][0]**2 + c[0][1]**2 + c[0][2]**2==0
+    def move(self,v):
+        #Moves the edge by vector v.
+        self.a = self.a + v[0]
+        self.b = self.b +v[0]
     def getDir(self):
         #Returns a unit vector, a to b.
         d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
@@ -110,9 +114,9 @@ class tri:
         if normal !=None:
             self.normal = unit(normal)
         else:
-            va = sp.array([ self.points[0][0]-self.points[1][0], self.points[0][1]-self.points[1][1], self.points[0][2]-self.points[1][2]])
-            vb = sp.array([ self.points[0][0]-self.points[2][0], self.points[0][1]-self.points[2][1], self.points[0][2]-self.points[2][2]])
-            self.normal = unit(sp.array([np.cross(va,vb),[0,0,0]]))
+            ab = sp.array([ self.points[0][0]-self.points[1][0], self.points[0][1]-self.points[1][1], self.points[0][2]-self.points[1][2]])
+            ac = sp.array([ self.points[0][0]-self.points[2][0], self.points[0][1]-self.points[2][1], self.points[0][2]-self.points[2][2]])
+            self.normal = unit(sp.array([np.cross(ab,ac),[0,0,0]]))
         self.plane = plane(self.points[0],self.normal)
         #Create edges through the list of points. the first edge goes from self.points[0] to self.points[1] and the last from self.points[-1] to self.points[0]
         self.edges = []
@@ -121,6 +125,19 @@ class tri:
             self.edges.append(edge(self.points[i],self.points[i-2]))        
     def __str__(self):
         return str(self.points[0]) + " , " + str(self.points[1]) + " , " + str(self.points[2])
+    def move(self,v):
+        #Moves the triangle by vector v.
+        updatedpoints = []
+        for edge in self.edges:
+            edge.move(v)
+            updatedpoints.append(edge.a)
+        self.points = updatedpoints
+        self.plane = plane(self.points[0],self.normal)
+    def warp(self,surface):
+        #surface is an open mesh with a zMin of 0 that also has only one z value per xy coordinate.
+        newpoints = []
+        for point in self.points:
+            print 'foo'
     def perimeter(self):
         #Return the perimeter of the facet
         perim = 0
