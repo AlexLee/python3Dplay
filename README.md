@@ -1,35 +1,17 @@
 python3Dplay
 ============
 
-Current Status: Just a framework for simple operations on .stl files.
+This project is a slicer for 3d printers. Conventional slicers cut 3d meshes into planar layers, then fill those layers with paths for the 3d printer to follow. This project differs in that instead of slicing with planes,
+I plan to slice with arbitrary functions of 2 variables. In the iteration hosted here, those functions were meant to be represented as meshes, which is why most of this repo is just code for mesh intersections.
 
-End Goal: Allow slicing of .stl files for 3d printing using arbitrary surfaces as the layer contour. 
+The iteration hosted here was my first attempt, which I dropped part way through because I realized it would never be efficient. I was trying to take the direct approach imitating regular slicers:
+Occlude my slicing surface for each layer, then fill it with paths. 
 
-By using layers which are not simple planes orthogonal to the Z axis, we can improve the structural properties of prints. 
-	-Parts intended to undergo torque along the Z axis can be made with radially interlocked layers to prevent shearing at layer boundaries.
-	-Parts expected to undergo pressure along the z axis can be made with the layers curved up toward the region where pressure is expected.
-	-Interior properties of the nonisotropic 3d printed parts can in general be manipulated.
-	
-Basic program structure (planned):
-	1. Import .stl
-	2. Import/select surface to be used as the layer contour. Format undecided as of yet. Ideally it will be a mathematical representation and not a mesh.
-	3. Define the region of the contour that will actually contact the object
-	4. Check that that region of the contour doesn't have any slopes too steep for the bevel of the printer hotend.
-	5. For each layer:
-		-Find intersections of the contour with the object
-		-Generate perimeter paths and ensure that they are as continuous as possible. Continuous extrusions add to the strength of parts.
-		-Generate infill paths, potentially with overlap to ensure they bond together strongly
-		-Connect to previous layer
-	6. Once the path is completed, map its proximity to itself along its length.
-	7. Taking proximity to self into account, plan the extrusion along the path
-	8. Convert to gcode and export
-	
-	
-Open ends:
-	-No firmware that I know of can do 3d curves, so curves will at some point have to be interpolated. For simplicity's sake, I'm also avoiding G2 arcs for now because I don't think their small benefit is worthwhile yet. The question then is, at what point in the program do we interpolate curves?
-	-How should I represent the slicing contour? Mathematical formulae would be ideal because checking intersections of the .stl mesh against the contour mesh would be O(n*m) where n and m are polycounts of the model and the contour. 
-	-How should top and bottom layers be done?
-		-Slice using the contour from the beginning. This would potentially make some very funny looking first layers, and therefore limit this to machines that are almost perfectly in tram.
-		-Make the first layer flat and all subsequent layers incl. the top with the contour. This moves the funny looking layers from before onto plastic, where they will adhere far better.
-		-Make top and bottom flat which would make the top slightly prettier but not do much else. Would also complicate the code a fair bit if I wanted to do all top surfaces instead of just the topmost one.
-	-How should I optimize the intersections check? I could use the max and min z values of each tri and the contour to eliminate a bunch, but i would need to see whether that actually provides savings. It probably does.
+However this approach is inherently slow because even with tricky optimizations (see boundingbox.py) I have to check check some of the triangles in the slicing surface against many of the triangles in the object for
+every layer. It also gets extremely complex in the uppermost layers.
+
+My new approach is to take every point in the object, find the value of the surface function at its (x,y) coordinates, and add that value to its z coordinate. This produces a version of the object warped by the slicing
+surface. I can then slice this warped version into flat layers very efficiently like conventional slicers, and populate those layers with toolpaths. Finally, I can shift every point in the toolpaths downward by
+their values on the surface function. This deforms each layer into the shape of the function, and deforms all the layers such that they add up to the original object.
+
+This project is essentially on hold right now until I have my 3d printer project at Marshall Lane Elementary done, and my early action college apps out of the way.
