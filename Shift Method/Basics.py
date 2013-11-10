@@ -23,7 +23,10 @@ def distance(a,b):
 
 def vlength(v):
     #Returns the length of vector v.
-    return sp.sqrt(sp.sum([n**2 for n in v]))
+    if v.shape==(2, 3):
+        return sp.sqrt(sp.sum([n**2 for n in v[0]]))
+    else:
+        return sp.sqrt(sp.sum([n**2 for n in v]))
 
 class edge:
     #Stores a pair of points and defines a connection between them.
@@ -55,7 +58,7 @@ class edge:
         #Checks if p is on edge
         AP = sp.array(p-self.a)
         BP = sp.array(p-self.b)
-        if not ((0==sp.cross(AP,BP)).all(): return False
+        if not ((0==sp.cross(AP,BP)).all()): return False
         return vlength(AP)<=self.length and vlength(BP)<=self.length
     def colinear(self,e):
         #Checks if self is colinear with e.
@@ -67,27 +70,20 @@ class edge:
         if self.containsPoint(point) and e.containsPoint(point): return point
         return False
 
-#Cleaned above this point
-
 class tri:
     #Stores a triangle. Normal is defined as a vector aka a 3x2 array. Triangle is formed from an ordered list of 3 connected points aka 3x1 arrays.
-    def __init__(self,points,normal=None):
-        #Normal should be a single vector. Points should be a list of points.
+    def __init__(self,points):
+        #Points should be a list of 3x1 arrays.
         self.points = sp.array(points)
-        if normal !=None:
-            self.normal = unit(normal)
-        else:
-            ab = sp.array([ self.points[0][0]-self.points[1][0], self.points[0][1]-self.points[1][1], self.points[0][2]-self.points[1][2]])
-            ac = sp.array([ self.points[0][0]-self.points[2][0], self.points[0][1]-self.points[2][1], self.points[0][2]-self.points[2][2]])
-            self.normal = unit(sp.array([np.cross(ab,ac),[0,0,0]]))
-        self.plane = plane(self.points[0],self.normal)
-        #Create edges through the list of points. the first edge goes from self.points[0] to self.points[1] and the last from self.points[-1] to self.points[0]
+        #Create edges through the list of points.
         self.edges = []
         for i in range(3):
-            #Very silly and intentionally pythonic way to do this.
-            self.edges.append(edge(self.points[i],self.points[i-2]))        
+            #Silly and intentionally pythonic way to do this. Edges are 1-2, 2-3, 3-1.
+            self.edges.append(edge(self.points[i],self.points[i-2]))
+        self.normal = unit(sp.array([np.cross(self.edges[0].dir[0],self.edges[1].dir[0]),[0,0,0]]))
+        self.plane = plane(self.points[0],self.normal)                
     def __str__(self):
-        return str(self.points[0]) + " , " + str(self.points[1]) + " , " + str(self.points[2])
+        return str(self.points[0]) + " , " + str(self.points[1]) + " , " + str(self.points[2])                
     def move(self,v):
         #Moves the triangle by vector v.
         updatedpoints = []
@@ -95,25 +91,14 @@ class tri:
             edge.move(v)
             updatedpoints.append(edge.a)
         self.points = updatedpoints
-        self.plane = plane(self.points[0],self.normal)
-    def warp(self,surface):
-        #surface is an open mesh with a zMin of 0 that also has only one z value per xy coordinate.
-        newpoints = []
-        for point in self.points:
-            print 'foo'
+        self.plane = plane(self.points[0],self.normal)                
     def perimeter(self):
-        #Return the perimeter of the facet
-        perim = 0
-        for edge in self.edges:
-            perim+= edge.length
-        return perim
+        #Return the perimeter of the triangle
+        return (sum(edge.length for edge in self.edges))
     def area(self):
         #Utilises Heron's formula
         p = self.perimeter()/2.0
-        a = self.edges[0].length
-        b = self.edges[1].length
-        c = self.edges[2].length
-        return (p*(p-a)*(p-b)*(p-c))**0.5
+        return (p*(p-self.edges[0].length)*(p-self.edges[1].length)*(p-self.edges[2].length))**0.5    
     def vector_intersect(self,vector_in,coords=False):
         #Checks if the vector intersects self.plane, then tests whether the point is inside tri. Coords decides whether a boolean or a point object is returned.
         intersect = self.plane.vector_intersect(vector_in,True)
@@ -142,12 +127,11 @@ class tri:
             c2 = unit(sp.cross(BC,BP))
             c3 = unit(sp.cross(CA,CP))
             return np.array_equal(c1,c2) and np.array_equal(c1,c3)
-        
     def edge_intersect(self,e):
         #Returns whether an edge hits self.
         intersect = self.vector_intersect(e.dir(),True)
         if type(intersect)==type(False): return False
-        return distance(intersect,e.a)<e.length
+        return distance(intersect,e.a)<e.length and distance(intersect,e.b)<e.length
     def plane_intersect(self,p):
         #Returns an edge in both plane p and self or boolean False if edge DNE.
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
@@ -159,10 +143,13 @@ class tri:
         points=[]
         for side in sides:
             intersect=p.vector_intersect(side,True)
-            if intersect!=False:
+            if type(intersect)!=type(False):
                 points+=intersect
         if points==[]:return False
         return edge(points[0],points[1])
+
+#Cleaned above this point
+
     def tri_intersect(self,t):
         #Returns an edge in both self and t.
         pEdge = plane_intersect(t.plane)
