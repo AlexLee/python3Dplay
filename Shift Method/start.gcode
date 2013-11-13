@@ -1,0 +1,6 @@
+;start.gcode
+G21
+G90
+G28 X0 Y0
+G28 Z0
+G92 E0

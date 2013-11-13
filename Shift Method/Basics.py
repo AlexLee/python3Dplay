@@ -133,7 +133,7 @@ class tri:
         if type(intersect)==type(False): return False
         return distance(intersect,e.a)<e.length and distance(intersect,e.b)<e.length
     def plane_intersect(self,p):
-        #Returns an edge in both plane p and self or boolean False if edge DNE.
+        #Returns an edge in both plane p and self or False if edge DNE.
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
         p1 = self.points[0]
         p2 = self.points[1]
@@ -147,31 +147,31 @@ class tri:
                 points+=intersect
         if points==[]:return False
         return edge(points[0],points[1])
+    
+##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
 
-#Cleaned above this point
-
-    def tri_intersect(self,t):
-        #Returns an edge in both self and t.
-        pEdge = plane_intersect(t.plane)
-        intersects = []
-        for edge in t.edges:
-            if pEdge.intersects(edge,False):
-                intersects.append(pEdge.intersects(edge,True))
-        if len(intersects)==0:
-            #If there are no intersections between the edges of tri and the edge formed by the plane intersect, the original plane intersect is on the surface of tri and therefore equivalent to
-            #tri intersect.
-            return pEdge
-        if len(intersects)==1:
-            #If there is 1 intersection, one end of pEdge will still be in tri. So we check if pEdge.a is in tri, and if it is return an edge from it to the 1 intersect. Otherwise we do the same to B
-            point  = intersects[0]
-            if self.contains(pEdge.a):
-                return edge(pEdge.a,point)
-            return edge(pEdge.b,point)
-        if len(intersects)==2:
-            #If there are 2 intersections, pEdge.a and pEdge.b both lie outside Tri, and the intersection of the triangles goes from one edge of t to the other. Thus it is the edge from one intersect
-            #to the other
-            return edge(intersects[0],intersects[1])
-            
+##    def tri_intersect(self,t):
+##        #Returns an edge in both self and t.
+##        pEdge = self.plane_intersect(t.plane)
+##        intersects = []
+##        for edge in t.edges:
+##            if pEdge.intersects(edge,False):
+##                intersects.append(pEdge.intersects(edge,True))
+##        if len(intersects)==0:
+##            #If there are no intersections between the edges of tri and the edge formed by the plane intersect, the original plane intersect is on the surface of tri and therefore equivalent to
+##            #tri intersect.
+##            return pEdge
+##        if len(intersects)==1:
+##            #If there is 1 intersection, one end of pEdge will still be in tri. So we check if pEdge.a is in tri, and if it is return an edge from it to the 1 intersect. Otherwise we do the same to B
+##            point  = intersects[0]
+##            if self.contains(pEdge.a):
+##                return edge(pEdge.a,point)
+##            return edge(pEdge.b,point)
+##        if len(intersects)==2:
+##            #If there are 2 intersections, pEdge.a and pEdge.b both lie outside Tri, and the intersection of the triangles goes from one edge of t to the other. Thus it is the edge from one intersect
+##            #to the other
+##            return edge(intersects[0],intersects[1])
+##            
             
 class plane:
     #Defines a plane from a point and a normal.
@@ -181,10 +181,9 @@ class plane:
     def vector_intersect(self,v,coords=False):
         #Tests whether a vector v hits self
         if self.normal[0].dot(v[0])==0: return False
-        #dot product includes cos(angle between 2 vectors) therefore if the angle between 2 vectors is >90 dot product is negative. So a negative dot-prod signals an obtuse angle between 2 vectors.
-        #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, so we use self.origin-v[1] as
-        #a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
-        #I still haven't wrapped my head around how the parameter is also the scalar multiple necessary to make v reach the plane.
+        #Dot product includes cos(angle between 2 vectors) therefore if the angle between 2 vectors is >90 dot product is negative. A negative dot-prod signals an obtuse angle between 2 vectors.
+        #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, so we use (plane origin - vector origin)
+        #as a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
         parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
         if coords:
             if parameter>=0: return v[1]+(v[0]*parameter)

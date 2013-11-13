@@ -2,6 +2,7 @@ import scipy as sp
 import numpy as np
 import math
 import Basics
+import mesh
 
 class surface:
     #Parent class which will contain the shift functions.
@@ -14,32 +15,44 @@ class surface:
     def triShift(self,t):
         #Returns tri t with its vertices shifted vertically by their functional values.
         return Basics.tri([self.pointShift(t.points[0]),self.pointShift(t.points[1]),self.pointShift(t.points[2])])
+    def meshShift(self,m):
+        #Returns mesh m with triShift applied to all its triangles.
+        newTris = []
+        for tri in m.tris:
+            newTris.append(self.triShift(tri))
+        return mesh.mesh(newTris)
     def dDeriv(self,v,p):
         #Returns the directional derivative of f along v at p as a scalar.
         v[0][2]=0 #Flattening v if it wasn't already.
-        return sp.dot(self.grad(p),Basics.unit(v))
+        uv = Basics.unit(v)[0]
+        uv = sp.array([uv[0],uv[1]])        #Turning uv 2D so that the dot product works
+        return sp.dot(self.grad(p),uv)
     def vectorWrap(self,v,d):
         #Wraps of vector of XY (Vector will be projected to XY if it isn't yet.) onto the surface by turning it into a series of vectors end to end such that no point on any of the vectors is more than delta (d) from its
-        #functional value in Z. Delta is kept in check using tangent plane approximation, so for large deltas you may get funny behavior. Returns a list of vectors.
+        #functional value in Z. Delta is kept in check using tangent plane approximation, so for large deltas you may get actual errors very different from delta. Returns a list of vectors.
         output = []
         XYlength = sp.sqrt(v[0][0]**2+v[0][1]**2)
         traveled = 0
-        pos = v[1]
+        pos = sp.array([v[1][0],v[1][1],self.f(v[1])])
         XY = sp.array([pos[0],pos[1],0])
         uv = Basics.unit(v)[0]
         uv[2]=0
         while traveled<XYlength:
             derivative = self.dDeriv(v,pos)    #Directional derivative
-            dXY = d/Basics.vlength(derivative)      #Distance to move in XY
+            if derivative==0:
+                dXY = 5*d
+            else:
+                dXY = d/derivative     #Distance to move in XY
+            print 'dXY=   ' + str(dXY)
             newXY = XY + uv*dXY
             move = [newXY[0]-XY[0],newXY[1]-XY[1],self.f(newXY)-pos[2]]
             output.append(sp.array([move,pos]))
             XY = newXY
             pos = pos+move
             traveled+=sp.sqrt(sp.sum(move[0]**2+move[1]**2))
-        lastPos = output[-1][1]
-        lastLength = Basics.distance(lastPos,v[1]+v[0])
-        output[-1]=output[-1]*lastLength/Basics.vlength(output[-1])
+        lastPos = sp.array([v[0][0]+v[1][0],v[0][1]+v[1][1],0])
+        lastPos += sp.array([0,0,self.f(lastPos)])
+        output[-1]=sp.array([lastPos-output[-1][1],output[-1][1]])
         return output
 
 class wave(surface):
