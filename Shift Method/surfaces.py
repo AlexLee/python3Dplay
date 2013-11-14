@@ -43,7 +43,6 @@ class surface:
                 dXY = 5*d
             else:
                 dXY = d/derivative     #Distance to move in XY
-            print 'dXY=   ' + str(dXY)
             newXY = XY + uv*dXY
             move = [newXY[0]-XY[0],newXY[1]-XY[1],self.f(newXY)-pos[2]]
             output.append(sp.array([move,pos]))

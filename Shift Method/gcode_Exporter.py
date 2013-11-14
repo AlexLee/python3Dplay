@@ -15,7 +15,7 @@ def gcode_Export(path,e):
     end = open('end.gcode','r')
     for line in start:
         output.write(line)
-    output.write(G1(path[0][1],0) + '\n')
+    output.write(G1([path[0][1][0],path[0][1][1],path[0][1][2],0]) + '\n')
     ePos = 0
     for v in path:
         ePos +=e*Basics.vlength(v[0])
@@ -31,6 +31,7 @@ def G1(p,e=0):
 
 w1 = surfaces.wave(1,1,0,0)
 v1 = sp.array([[0,2,0],[0.08,0,0]])
+gcode_Export(w1.vectorWrap(v1,0.1),1)
 
 
 
