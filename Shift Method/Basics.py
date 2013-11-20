@@ -65,12 +65,31 @@ class edge:
     def colinear(self,e):
         #Checks if self is colinear with e.
         return (0==sp.cross(self.dir[0],e.dir[0])).all() and (0==sp.cross(self.dir[0],sp.array(self.a-e.a))).all()
-    def intersect(self,e,coords=True):
+    def intersect(self,e,coords=True,actual=True):
+        #Returns data about the intersection of self and edge e.
+        #if coords, return the intersection as a point or false if intersection DNE. If not coords, return true/false
+        #actual is a boolean for whether the intersection must be on both edges or not. 
         AA = sp.array(e.a-self.a)
         proj = np.dot(self.dir[0],AA)*unit(self.dir[0])
-        point = sp.array(self.a+proj)
-        if self.containsPoint(point) and e.containsPoint(point): return point
-        return False
+        point = sp.array(self.a+proj)   #One issue with this method is in case of parallel edges, it returns a rather arbitrary point on self.
+        if actual:
+            #Here the parallels are solved because the erroneous intersections won't be on both lines.
+            if self.containsPoint(point) and e.containsPoint(point): 
+                if coords: return point
+                return True
+            return False
+        else:
+            #Here we have to check that the point is at least colinear with both.
+            EAP = sp.array(point-e.a)
+            EBP = sp.array(point-e.b)
+            SAP = sp.array(point-self.a)
+            SBP = sp.array(point-self.b)
+            s1 = EAP[0]/EBP[0]
+            s2 = SAP[0]/EBP[0]
+            if (EAP/EBP==s1).all() and (SAP/SBP==s2).all():
+                if coords: return point
+                return True
+            return False
     def equivalent(self,e):
         #Checks if e shares both endpoints with self.
         return (np.array_equal(self.a,e.a) and np.array_equal(self.b,e.b)) or (np.array_equal(self.a,e.b) and np.array_equal(self.b,e.a))
