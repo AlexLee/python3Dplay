@@ -37,6 +37,9 @@ def order(layer):
             activeLoop = [layer[0]]
             layer = layer[1:]
         if len(layer)==0: running = False
+    for loop in loops:
+        if not sp.array_equal(loop[0].a,loop[-1].b):
+            return 'Loop opening found at ' + str(loop[0].a)
     return loops
             
 
