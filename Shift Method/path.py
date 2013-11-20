@@ -43,11 +43,22 @@ def order(layer):
     return loops
             
 
-def shell(shellCount,mesh,loopList):
+def shell(shellCount,mesh,loopList,extrusionWidth):
     #This function takes a flat layer which has been linearized and generates the shell paths.
     loopGroups = []
     for loop in loopList:
         loopShells = []     #A list of the shells produced for this loop
-        activeShell = []    #A list of the edges produced for this shell
-        for edge in loop:
+        for shell in range(shellCount):
+            activeShell = loop    #A clean object to make sure I don't mess up my original borders.
+            if shell==0:
+                for edge in activeShell:
+                    #Only move the first shell in by half the width, so that its outer edge is correctly positioned.
+                    edge.move(sp.cross(edge.dir[0]*extrusionWidth/2.0,sp.array([0,0,1])
+            else:
+                for edge in activeShell:
+                    edge.move(sp.cross(edge.dir[0]*extrusionWidth,sp.array([0,0,1])
+            #At this point we have all the edges in the active Shell shifted inward by the correct ammount, but it isn't
+            #a closed shape anymore.
+            for edge in activeshell[0:-1]:
+                
         
