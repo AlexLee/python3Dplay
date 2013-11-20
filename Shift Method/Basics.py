@@ -36,7 +36,9 @@ class edge:
         self.dir=None
         self.setDir()
         subtrArray = sp.dstack([self.a,-self.b]).sum(2)
-        self.length = sp.sqrt(sp.sum([n**2 for n in subtrArray])) 
+        self.length = sp.sqrt(sp.sum([n**2 for n in subtrArray]))
+    def __eq__(self,e):
+        return sp.array_equal(e.a,self.a) and sp.array_equal(e.b,self.b)
     def __str__(self):
         return str(self.a)+str(self.b)
     def parallel(self,e):
@@ -69,6 +71,9 @@ class edge:
         point = sp.array(self.a+proj)
         if self.containsPoint(point) and e.containsPoint(point): return point
         return False
+    def equivalent(self,e):
+        #Checks if e shares both endpoints with self.
+        return (np.array_equal(self.a,e.a) and np.array_equal(self.b,e.b)) or (np.array_equal(self.a,e.b) and np.array_equal(self.b,e.a))
 
 class tri:
     #Stores a triangle. Normal is defined as a vector aka a 3x2 array. Triangle is formed from an ordered list of 3 connected points aka 3x1 arrays.

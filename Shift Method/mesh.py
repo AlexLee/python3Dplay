@@ -15,12 +15,6 @@ class mesh:
             for edge in tri.edges:
                 self.edges.append(edge)
         self.region = sp.array([[0,0,0],[0,0,0]])
-        self.xMax=0 #Max and mins on each axis provide useful optimizations.
-        self.xMin=0
-        self.yMax=0
-        self.yMin=0
-        self.zMax=0
-        self.zMin=0
         self.center = None
         self.updateLims()
     def updateLims(self):
@@ -49,8 +43,18 @@ class mesh:
         for tri in self.tris:
             if tri.edge_intersect(e): return True
         return False
+    def contains(self,p):
+        #Checks whether point is inside self.
+        if not self.region[1][0]<=p[0]<=self.region[0][0]: return False #Simple bounding box check
+        if not self.region[1][1]<=p[1]<=self.region[0][1]: return False
+        if not self.region[1][2]<=p[2]<=self.region[0][2]: return False
+        testVector = sp.array([[0,0,50+self.zMax],p])
+        hits = 0
+        for tri in self.tris:
+            if tri.vector_intersect(testVector): hits+=1
+        return hits%2==1
     def chop(self,layerHeight):
-        #Returns an ordered list of layers. Each layer consists of a list of edges which represent the intersection of self with the plane z=(layer #-1/2) * layerHeight
+        #Returns an ordered list of layers. Each layer consists of a list of edges which represent the intersection of self with the plane z=(layer #-1/2) * layerHeight. The first item in each layer is a point inside the mesh.
         height = self.region[0][2]-self.region[1][2]
         layers= []
         for layer in range(int(height/layerHeight)):
