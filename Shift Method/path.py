@@ -43,6 +43,11 @@ def order(layer):
     return loops
             
 
-def shell(shellCount,mesh,layer):
+def shell(shellCount,mesh,loopList):
     #This function takes a flat layer which has been linearized and generates the shell paths.
-    print 'foo'
+    loopGroups = []
+    for loop in loopList:
+        loopShells = []     #A list of the shells produced for this loop
+        activeShell = []    #A list of the edges produced for this shell
+        for edge in loop:
+        
