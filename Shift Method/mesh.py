@@ -17,6 +17,11 @@ class mesh:
         self.region = sp.array([[0,0,0],[0,0,0]])
         self.center = None
         self.updateLims()
+    def __str__(self):
+        string = ''
+        for tri in self.tris:
+            string=string+' [' + str(tri) + ']'
+        return string
     def updateLims(self):
         xSum = 0 
         ySum = 0
@@ -58,7 +63,7 @@ class mesh:
         height = self.region[0][2]-self.region[1][2]
         layers= []
         for layer in range(int(height/layerHeight)):
-            cuttingPlane = plane(sp.array([0,0,(layer-1/2)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
+            cuttingPlane = Basics.plane(sp.array([0,0,(layer-1/2)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
             edges = []
             for tri in self.tris:
                 intersect = tri.plane_intersect(cuttingPlane)

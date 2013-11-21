@@ -53,9 +53,9 @@ class edge:
             self.a = self.a + v
             self.b = self.b +v
     def setDir(self):
-        #Updates self.dir.      
-            d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
-            self.dir = sp.vstack((unit(d),self.a))
+        #Updates self.dir.
+        d=sp.array([self.b[0] - self.a[0],self.b[1] - self.a[1],self.b[2] - self.a[2]])
+        self.dir = sp.vstack((unit(d),self.a))
     def containsPoint(self,p):
         #Checks if p is on edge
         AP = sp.array(p-self.a)
@@ -168,8 +168,9 @@ class tri:
         for side in sides:
             intersect=p.vector_intersect(side,True)
             if type(intersect)!=type(False):
-                points+=intersect
+                points.append(intersect)
         if points==[]:return False
+        if len(points)==1: return points[0]
         return edge(points[0],points[1])
     
 ##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
@@ -204,11 +205,14 @@ class plane:
         self.normal = unit(normal)
     def vector_intersect(self,v,coords=False):
         #Tests whether a vector v hits self
-        if self.normal[0].dot(v[0])==0: return False
+        if (self.normal[0].dot(v[0])==0).all(): return False
         #Dot product includes cos(angle between 2 vectors) therefore if the angle between 2 vectors is >90 dot product is negative. A negative dot-prod signals an obtuse angle between 2 vectors.
-        #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, so we use (plane origin - vector origin)
-        #as a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
-        parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
+        #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, and some obtuse angles will still hit,
+        #so we use (plane origin - vector origin) as a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
+        if v.shape==(2, 3):
+            parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
+        elif v.shape==(3,):
+            parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v)
         if coords:
             if parameter>=0: return v[1]+(v[0]*parameter)
         elif parameter>=0: return True
