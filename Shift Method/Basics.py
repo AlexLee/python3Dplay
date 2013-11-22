@@ -159,11 +159,7 @@ class tri:
     def plane_intersect(self,p):
         #Returns an edge in both plane p and self or False if edge DNE.
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
-        p1 = self.points[0]
-        p2 = self.points[1]
-        p3 = self.points[2]
-        #Transforming the 3 sides into vectors for testing against the plane
-        sides=[sp.array([ p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]]), sp.array([ p2[0]-p3[0], p2[1]-p3[1], p2[2]-p3[2]]), sp.array([ p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])]
+        sides=[self.edges[0].dir,self.edges[1].dir,self.edges[2].dir]
         points=[]
         for side in sides:
             intersect=p.vector_intersect(side,True)
@@ -171,7 +167,7 @@ class tri:
                 points.append(intersect)
         if points==[]:return False
         if len(points)==1: return points[0]
-        return edge(points[0],points[1])
+        return Basics.edge(points[0],points[1])
     
 ##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
 
@@ -210,9 +206,13 @@ class plane:
         #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, and some obtuse angles will still hit,
         #so we use (plane origin - vector origin) as a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
         if v.shape==(2, 3):
-            parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
+            dotProd = self.normal[0].dot(v[0])
+            if dotProd==0:
+                parameter = self.normal[0].dot(self.origin-v[1])
+            else:
+                parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
         elif v.shape==(3,):
-            parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v)
+            return 'Attempted to intersect a vector of shape [3,]. Without starting point, intersects are meaningless.'
         if coords:
             if parameter>=0: return v[1]+(v[0]*parameter)
         elif parameter>=0: return True

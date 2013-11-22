@@ -11,3 +11,5 @@ import gcode_Exporter
 
 test = stl_importer.stl_import('model.stl')
 layers = test.chop(1.5)
+
+
