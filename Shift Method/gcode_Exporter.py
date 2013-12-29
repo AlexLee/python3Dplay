@@ -1,5 +1,4 @@
 import scipy as sp
-import numpy as np
 import Basics
 import math
 import surfaces

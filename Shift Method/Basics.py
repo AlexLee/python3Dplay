@@ -1,5 +1,4 @@
 import scipy as sp
-import numpy as np
 import math
 
 #Points are 3x1 matrices, vectors are 3x2. Row 2 of vectors are their origin points. Below are the 3 unit vectors.
@@ -70,7 +69,7 @@ class edge:
         #if coords, return the intersection as a point or false if intersection DNE. If not coords, return true/false
         #actual is a boolean for whether the intersection must be on both edges or not. 
         AA = sp.array(e.a-self.a)
-        proj = np.dot(self.dir[0],AA)*unit(self.dir[0])
+        proj = sp.dot(self.dir[0],AA)*unit(self.dir[0])
         point = sp.array(self.a+proj)   #One issue with this method is in case of parallel edges, it returns a rather arbitrary point on self.
         if actual:
             #Here the parallels are solved because the erroneous intersections won't be on both lines.
@@ -92,7 +91,7 @@ class edge:
             return False
     def equivalent(self,e):
         #Checks if e shares both endpoints with self.
-        return (np.array_equal(self.a,e.a) and np.array_equal(self.b,e.b)) or (np.array_equal(self.a,e.b) and np.array_equal(self.b,e.a))
+        return (sp.array_equal(self.a,e.a) and sp.array_equal(self.b,e.b)) or (sp.array_equal(self.a,e.b) and sp.array_equal(self.b,e.a))
 
 class tri:
     #Stores a triangle. Normal is defined as a vector aka a 3x2 array. Triangle is formed from an ordered list of 3 connected points aka 3x1 arrays.
@@ -104,7 +103,7 @@ class tri:
         for i in range(3):
             #Silly and intentionally pythonic way to do this. Edges are 1-2, 2-3, 3-1.
             self.edges.append(edge(self.points[i],self.points[i-2]))
-        self.normal = unit(sp.array([np.cross(self.edges[0].dir[0],self.edges[1].dir[0]),[0,0,0]]))
+        self.normal = unit(sp.array([sp.cross(self.edges[0].dir[0],self.edges[1].dir[0]),[0,0,0]]))
         self.plane = plane(self.points[0],self.normal)                
     def __str__(self):
         return str(self.points[0]) + " , " + str(self.points[1]) + " , " + str(self.points[2])                
@@ -150,7 +149,7 @@ class tri:
             c1 = unit(sp.cross(AB,AP))
             c2 = unit(sp.cross(BC,BP))
             c3 = unit(sp.cross(CA,CP))
-            return np.array_equal(c1,c2) and np.array_equal(c1,c3)
+            return sp.array_equal(c1,c2) and sp.array_equal(c1,c3)
     def edge_intersect(self,e):
         #Returns whether an edge hits self.
         intersect = self.vector_intersect(e.dir(),True)
@@ -167,7 +166,7 @@ class tri:
                 points.append(intersect)
         if points==[]:return False
         if len(points)==1: return points[0]
-        return Basics.edge(points[0],points[1])
+        return edge(points[0],points[1])
     
 ##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
 

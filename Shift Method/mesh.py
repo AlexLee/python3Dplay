@@ -1,5 +1,4 @@
 import scipy as sp
-import numpy as np
 import math
 import Basics
 
@@ -53,7 +52,7 @@ class mesh:
         if not self.region[1][0]<=p[0]<=self.region[0][0]: return False #Simple bounding box check
         if not self.region[1][1]<=p[1]<=self.region[0][1]: return False
         if not self.region[1][2]<=p[2]<=self.region[0][2]: return False
-        testVector = sp.array([[0,0,50+self.zMax],p])
+        testVector = sp.array([[0,0,50+self.region[0][2]],p])
         hits = 0
         for tri in self.tris:
             if tri.vector_intersect(testVector): hits+=1
@@ -63,7 +62,8 @@ class mesh:
         height = self.region[0][2]-self.region[1][2]
         layers= []
         for layer in range(int(height/layerHeight)):
-            cuttingPlane = Basics.plane(sp.array([0,0,(layer-1/2)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
+            #Adding 0.5*layerHeight to height of cutting plane so that the plane will be as representative as possible of the general layer volume.
+            cuttingPlane = Basics.plane(sp.array([0,0,(layer+0.5)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
             edges = []
             for tri in self.tris:
                 intersect = tri.plane_intersect(cuttingPlane)

@@ -1,7 +1,6 @@
 #The error reports in this are extremely hackish so far. I'll implement actual error classes if this gets built into something bigger. If this comment makes it into something bigger, make fun of me for it.
 
 import scipy as sp
-import numpy as np
 import math
 import Basics
 import mesh

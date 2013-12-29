@@ -1,6 +1,6 @@
 import scipy as sp
-import numpy as np
 import math
+
 import Basics
 import mesh
 

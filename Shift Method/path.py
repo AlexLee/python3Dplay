@@ -1,47 +1,67 @@
 import scipy as sp
-import numpy as np
 import math
+
 import Basics
 import mesh
 
 
 def straighten(layer,mesh):
-    #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the right.
+    #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the left.
     newEdges = []
     for edge in layer:
         right = sp.cross(edge.dir[0],sp.array([0,0,1]))
-        if mesh.contains(edge.a+0.01*right+0.5*edge.length*edge.dir[0]):
+        if mesh.contains(edge.a-0.01*right+0.5*edge.length*edge.dir[0]):
             newEdges.append(edge)
         else:
             newEdges.append(Basics.edge(edge.b,edge.a))
-    return newEdge
-
-
-#Untested
+    return newEdges
 
 def order(layer):
-    running = True
     activeEdge = layer[0]
-    activeLoop = [activeEdge]
-    loops = []
+    running = True
+    output = [activeEdge]
     while running:
-        startEdge = activeEdge          #Save active Edge for later
+        startEdge = activeEdge
         for edge in layer:
             if sp.array_equal(edge.a,activeEdge.b):
-                layer.remove(edge)
-                activeLoop.append(edge)
-                activeEdge = edge
-        if startEdge==activeEdge:
-            #We must not have found any.
-            loops.append(activeLoop)
-            activeLoop = [layer[0]]
-            layer = layer[1:]
-        if len(layer)==0: running = False
-    for loop in loops:
-        if not sp.array_equal(loop[0].a,loop[-1].b):
-            return 'Loop opening found at ' + str(loop[0].a)
-    return loops
-            
+                #If this edge starts at the end of the last edge
+                output.append(edge)     #Add it to the order
+                layer.remove(edge)      #Take it out of the old list
+                activeEdge = edge       #Set it as the new last edge
+            if startEdge==activeEdge:
+                #There is no edge left in layer which starts at the end of activeEdge.
+                #We've finished the layer
+                running = False
+    return output
+
+
+#Function below attempts to handle layers with multiple loops. Nonfunctional.
+##def order(layer):
+##    running = True
+##    activeEdge = layer[0]
+##    activeLoop = [activeEdge]
+##    loops = []
+##    while running:
+##        startEdge = activeEdge          #Save active Edge for later
+##        for edge in layer:
+##            if sp.array_equal(edge.a,activeEdge.b):
+##                layer.remove(edge)
+##                activeLoop.append(edge)
+##                activeEdge = edge
+##        if startEdge==activeEdge:
+##            #We must not have found any.
+##            loops.append(activeLoop)
+##            activeLoop = [layer[0]]
+##            layer = layer[1:]
+##        if len(layer)==0: running = False
+##    for loop in loops:
+##        if not sp.array_equal(loop[0].a,loop[-1].b):
+##            return 'Loop opening found at ' + str(loop[0].a)
+##    return loops
+
+def clean(layer):
+    #Takes a straightened, ordered layer and turns any colinear edges with shared endpoints into single edges.
+    print 'unimplemented'
 
 def shell(shellCount,mesh,loopList,extrusionWidth):
     #This function takes a flat layer which has been linearized and generates the shell paths as edges.
