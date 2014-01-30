@@ -21,25 +21,24 @@ def order(layer):
     activeEdge = layer[0]
     running = True
     output = [activeEdge]
+    count = len(layer)-1
+    loop = 1
     while running:
-        first = True
-        startEdge = activeEdge
+        startCount = count
         for edge in layer:
-            if sp.array_equal(edge.a,activeEdge.b):
+            if sp.allclose(edge.a,activeEdge.b,1e-8,0):
                 #If this edge starts at the end of the last edge
                 output.append(edge)     #Add it to the order
-                layer.remove(edge)      #Take it out of the old list
+                layer.remove(edge)      #Take it out of the old list.
                 activeEdge = edge       #Set it as the new last edge
-                print "Found and finished one."
-            if startEdge==activeEdge:
-                #There is no edge left in layer which starts at the end of activeEdge.
-                #We've finished the layer
-                if first:
-                    print "Found first match."
-                    first=False
-                else:
-                    print "Ending!"
-                    running = False
+                count -= 1
+                break
+        if count==startCount:
+            output.extend(loop,layer[0])
+            loop +=1
+        if count==0:
+            print "Done"
+            running = False
     return output
 
 

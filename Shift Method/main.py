@@ -6,12 +6,16 @@ import display
 import Basics
 import stl_importer
 import mesh
-import surfaces
 import path
 import gcode_Exporter
 
 test = stl_importer.stl_import('model.stl')
-layers = test.chop(1.5)
-straight = path.straighten(layers[2],test)
-ordered = path.order(straight)
-display.edgePlot(ordered)
+layers = test.chop(1)
+stLayers = []
+for layer in layers:
+    stLayers.append(path.straighten(layer,test))
+#display.edgePlot(stLayers[3])
+#order1 = path.order(stLayers[3])
+oLayers = []
+for layer in stLayers:
+    oLayers.append(path.order(layer))
