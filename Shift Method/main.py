@@ -12,11 +12,6 @@ import gcode_Exporter
 
 test = stl_importer.stl_import('model.stl')
 layers = test.chop(1.5)
-straightLayers = []
-for layer in layers:
-    straightLayers.append(path.straighten(layer,test))
-orderedLayers = []
-for layer in straightLayers:
-    orderedLayers.append(path.order(layer))
-display.edgePlot(layers[2])
-display.edgePlot(straightLayers[2])
+straight = path.straighten(layers[2],test)
+ordered = path.order(straight)
+display.edgePlot(ordered)
