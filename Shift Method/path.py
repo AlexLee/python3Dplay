@@ -61,29 +61,7 @@ def clean(layer):
                 
 
 def shell(shellCount,mesh,loopList,extrusionWidth):
-    #This function takes a flat layer which has been linearized and generates the shell paths as edges.
-    #WARNING: This function is really primitive, and should NOT be kept if this ever becomes more than a proof of concept program.
-    loopGroups = []
-    for loop in loopList:
-        loopShells = []     #A list of the shells produced for this loop
-        activeShell = loop    #A clean object to make sure I don't mess up my original borders.
-        for shell in range(shellCount):
-            #First we shift all the edges which compose the last shell inward by the proper amount
-            if shell==0:
-                for edge in activeShell:
-                    #Only move the first shell in by half the width, so that its outer edge is correctly positioned.
-                    edge.move(sp.cross(edge.dir[0]*extrusionWidth/2.0,sp.array([0,0,1])))
-            else:
-                for edge in activeShell:
-                    edge.move(sp.cross(edge.dir[0]*extrusionWidth,sp.array([0,0,1])))
-            #Then, for each edge, figure out where its direction vector intersects that of the one after it, and make that point its new B endpoint. This turns the shifted edges into a continuous loop again.
-            for i in (len(activeshell)-1):
-                       newB = activeShell[i].intersect(activeShell[i+1],True,False)
-                       activeShell[i]=Basics.edge(activeShell[i].a,newB)
-            activeShell[-1]=Basics.edge(activeShell[-1].a,activeShell[-1].intersect(activeShell[0],True,False))     #This line is sort of ugly, but it's just fixing the end of the last edge in the loop.
-            loopShells.append(activeShell)
-            #We let activeShell ride around, since we want the next loop to be shifted inward from this one, not from the beginning.
-        #Once a loop has the correct number of shells, we throw them into loopGroups and move on.
-        loopGroups.append(loopShells)
-    return loopGroups
+    #This function takes a flat layer which has been straightened, ordered, and cleaned, then adds shells to it.
+    #If input is [loop1,loop2,loop3] output is [loop1,shells of loop 1,loop 2, shells of loop 2,...]
+    
             
