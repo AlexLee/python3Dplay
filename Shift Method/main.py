@@ -6,12 +6,16 @@ import path
 import gcode_Exporter
 
 test = stl_importer.stl_import('model.stl')
-layers = test.chop(0.2)
+layers = test.chop(1)
 stLayers = []
 for layer in layers:
     stLayers.append(path.straighten(layer,test))
 #display.edgePlot(stLayers[3])
 #order1 = path.order(stLayers[3])
-oLayers = []
+cLayers = []
 for layer in stLayers:
-    oLayers.append(path.order(layer)
+    cLayers.append(path.clean(path.order(layer)))
+chain = []
+for layer in cLayers: chain.extend(layer)
+
+display.edgePlot(chain)

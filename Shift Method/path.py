@@ -35,7 +35,6 @@ def order(layer):
             output.extend('Loop end',layer[0])
             loop +=1
         if count==0:
-            print "Done"
             running = False
     return output
 
@@ -55,6 +54,9 @@ def clean(layer):
                 skip = True
             else:
                 cleanLayer.append(e1)
+    if layer[-1]!='Loop end':
+        if not sp.allclose(layer[-1].b,cleanLayer[-1].b,1e-8,0):
+            cleanLayer.append(layer[-1])
     return cleanLayer
                 
 
