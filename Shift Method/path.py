@@ -1,6 +1,4 @@
 import scipy as sp
-import math
-
 import Basics
 import mesh
 
@@ -34,41 +32,31 @@ def order(layer):
                 count -= 1
                 break
         if count==startCount:
-            output.extend(loop,layer[0])
+            output.extend('Loop end',layer[0])
             loop +=1
         if count==0:
             print "Done"
             running = False
     return output
 
-
-#Function below attempts to handle layers with multiple loops. Nonfunctional.
-##def order(layer):
-##    running = True
-##    activeEdge = layer[0]
-##    activeLoop = [activeEdge]
-##    loops = []
-##    while running:
-##        startEdge = activeEdge          #Save active Edge for later
-##        for edge in layer:
-##            if sp.array_equal(edge.a,activeEdge.b):
-##                layer.remove(edge)
-##                activeLoop.append(edge)
-##                activeEdge = edge
-##        if startEdge==activeEdge:
-##            #We must not have found any.
-##            loops.append(activeLoop)
-##            activeLoop = [layer[0]]
-##            layer = layer[1:]
-##        if len(layer)==0: running = False
-##    for loop in loops:
-##        if not sp.array_equal(loop[0].a,loop[-1].b):
-##            return 'Loop opening found at ' + str(loop[0].a)
-##    return loops
-
 def clean(layer):
     #Takes a straightened, ordered layer and turns any colinear edges with shared endpoints into single edges.
-    print 'unimplemented'
+    cleanLayer = []
+    skip = False
+    for index in range(len(layer)-1):
+        if skip:
+            skip=False
+            continue
+        e1 = layer[index]
+        e2 = layer[index+1]
+        if e1!='Loop end' and e2!='Loop end':
+            if sp.allclose(e1.dir[0],e2.dir[0],1e-8,0):
+                cleanLayer.append(Basics.edge(e1.a,e2.b))
+                skip = True
+            else:
+                cleanLayer.append(e1)
+    return cleanLayer
+                
 
 def shell(shellCount,mesh,loopList,extrusionWidth):
     #This function takes a flat layer which has been linearized and generates the shell paths as edges.
