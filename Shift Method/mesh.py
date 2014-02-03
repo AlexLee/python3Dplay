@@ -1,5 +1,3 @@
-import scipy as sp
-import math
 import Basics
 
 
