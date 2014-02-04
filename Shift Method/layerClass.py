@@ -1,6 +1,7 @@
 import Basics
+import scipy as sp
 
-class layer(loops,thickness,mesh):
+class layer():
     #Layer object created by mesh.chop function, and acted on by lots of stuff.
     #loops is a list of closed loops of edges. This is the outermost edge, not an actual path.
     #thickness is the vertical thickness of the layer.
@@ -14,3 +15,4 @@ class layer(loops,thickness,mesh):
         #A list of all the 
         self.extrusions = []
         self.path = []
+    

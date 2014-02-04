@@ -1,4 +1,6 @@
 import Basics
+import scipy as sp
+import layerClass
 
 
 class mesh:
@@ -51,10 +53,10 @@ class mesh:
         if not self.region[1][1]<=p[1]<=self.region[0][1]: return False
         if not self.region[1][2]<=p[2]<=self.region[0][2]: return False
         testVector = sp.array([[0,0,50+self.region[0][2]],p])
-        hits = 0
+        inside = False
         for tri in self.tris:
-            if tri.vector_intersect(testVector): hits+=1
-        return hits%2==1
+            if tri.vector_intersect(testVector): inside = not inside
+        return inside
     def chop(self,layerHeight):
         #Returns an ordered list of layers. Each layer consists of a list of edges which represent the intersection of self with the plane z=(layer #-1/2) * layerHeight. The first item in each layer is a point inside the mesh.
         height = self.region[0][2]-self.region[1][2]
@@ -67,6 +69,6 @@ class mesh:
                 intersect = tri.plane_intersect(cuttingPlane)
                 if type(intersect)!=type(False):
                     edges.append(intersect)
-            layers.append(edges)
+            layers.append(layerClass.layer(edges,layerHeight,self))
         return layers
                     

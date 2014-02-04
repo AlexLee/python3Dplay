@@ -1,10 +1,12 @@
 import scipy as sp
 import Basics
 import mesh
+import layer
 
 
-def straighten(layer,mesh):
+def straighten(layer, mesh):
     #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the left.
+    #layer is a list of edges outputted by mesh.chop. It is NOT a layer.
     newEdges = []
     for edge in layer:
         right = sp.cross(edge.dir[0],sp.array([0,0,1]))
@@ -14,8 +16,13 @@ def straighten(layer,mesh):
             newEdges.append(Basics.edge(edge.b,edge.a))
     return newEdges
 
+def straightenAll(layerList):
+    #Straightens the borders of all the layers in a list of layers.
+    part = layerList[0].mesh
+    for layer in layerList:
+        layer.borders=straighten(layer.borders,part)
+
 def order(layer):
-    #This function currently cannot handle multiple loops.
     activeEdge = layer[0]
     running = True
     output = [activeEdge]
@@ -63,5 +70,4 @@ def clean(layer):
 def shell(shellCount,mesh,loopList,extrusionWidth):
     #This function takes a flat layer which has been straightened, ordered, and cleaned, then adds shells to it.
     #If input is [loop1,loop2,loop3] output is [loop1,shells of loop 1,loop 2, shells of loop 2,...]
-    
-            
+    print "Not implemented woo!"
