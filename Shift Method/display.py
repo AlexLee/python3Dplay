@@ -28,3 +28,6 @@ def edgePlot(path):
         ax.plot([edge.a[0],edge.b[0]],[edge.a[1],edge.b[1]],[edge.a[2],edge.b[2]])
         ax.text(edge.a[0],edge.a[1],edge.a[2],str(n))
     plt.show()
+def meshShow(mesh):
+    #Displays a mesh.
+    print "unimplemented."

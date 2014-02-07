@@ -5,6 +5,6 @@ import stl_importer
 import path
 import gcode_Exporter
 
-test = stl_importer.stl_import('model.stl')
+test = stl_importer.stl_import('twoLoop.stl')
 layers = test.chop(1)
 path.straightenAll(layers)

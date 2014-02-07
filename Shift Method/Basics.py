@@ -156,7 +156,7 @@ class tri:
         if type(intersect)==type(False): return False
         return distance(intersect,e.a)<e.length and distance(intersect,e.b)<e.length
     def plane_intersect(self,p):
-        #Returns an edge in both plane p and self or False if edge DNE.
+        #Returns a list of an edge and 
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
         sides=[self.edges[0].dir,self.edges[1].dir,self.edges[2].dir]
         points=[]
@@ -164,9 +164,9 @@ class tri:
             intersect=p.vector_intersect(side,True)
             if type(intersect)!=type(False):
                 points.append(intersect)
-        if points==[]:return False
-        if len(points)==1: return points[0]
-        return edge(points[0],points[1])
+        if points==[]:return (False,0)
+        if len(points)==1: return (points[0],1)
+        return (edge(points[0],points[1]),2)
     
 ##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
 

@@ -65,10 +65,10 @@ class mesh:
             #Adding 0.5*layerHeight to height of cutting plane so that the plane will be as representative as possible of the general layer volume.
             cuttingPlane = Basics.plane(sp.array([0,0,(layer+0.5)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
             edges = []
-            for tri in self.tris:
-                intersect = tri.plane_intersect(cuttingPlane)
-                if type(intersect)!=type(False):
-                    edges.append(intersect)
+            for triangle in self.tris:
+                intersect = triangle.plane_intersect(cuttingPlane)
+                if intersect[1]==2:
+                    edges.append(intersect[0])
             layers.append(layerClass.layer(edges,layerHeight,self))
         return layers
                     

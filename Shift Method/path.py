@@ -1,7 +1,7 @@
 import scipy as sp
 import Basics
 import mesh
-import layer
+import layerClass
 
 
 def straighten(layer, mesh):
@@ -23,25 +23,29 @@ def straightenAll(layerList):
         layer.borders=straighten(layer.borders,part)
 
 def order(layer):
-    activeEdge = layer[0]
+    unsorted = layer
+    activeEdge = unsorted[0]
     running = True
-    output = [activeEdge]
-    count = len(layer)-1
-    loop = 1
+    output = []
+    count = len(unsorted)-1
+    loop = []
     while running:
         startCount = count
-        for edge in layer:
+        for edge in unsorted[1:]:
             if sp.allclose(edge.a,activeEdge.b,1e-8,0):
                 #If this edge starts at the end of the last edge
-                output.append(edge)     #Add it to the order
-                layer.remove(edge)      #Take it out of the old list.
+                loop.append(edge)     #Add it to the order
+                unsorted.remove(edge)      #Take it out of the old list.
                 activeEdge = edge       #Set it as the new last edge
                 count -= 1
                 break
         if count==startCount:
-            output.extend('Loop end',layer[0])
-            loop +=1
+            print "Adding loop of length:" + str(len(loop))
+            output.append(loop)
+            loop =[]
         if count==0:
+            print "Ending while. Current loop length:" + str(len(loop))
+            output.append(loop)
             running = False
     return output
 
