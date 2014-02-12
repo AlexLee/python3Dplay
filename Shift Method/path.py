@@ -22,32 +22,73 @@ def straightenAll(layerList):
     for layer in layerList:
         layer.borders=straighten(layer.borders,part)
 
+class section():
+    #A contiguous list of edges, which can be open or closed.
+    def __init__(self,startEdge):
+        self.startEdge = startEdge
+        self.edges = [startEdge]
+        self.end = startEdge.b
+        self.start = startEdge.a
+    def __str__(self):
+        return len(self.edges)
+    def attempttoAdd(self,edge):
+        #Attempts to add the edge to either end. updates self.start or end if it succeeds. Returns boolean for success.
+        if sp.allclose(self.end,edge.a,1e-8,0):
+            self.edges.append(edge)
+            self.end = edge.b
+            return True
+        if sp.allclose(self.start,edge.b,1e-8,0):
+            self.edges = [edge] + self.edges
+            self.start = edge.a
+            return True
+        return False
+    def checkClosed(self):
+        #Checks if section is a closed loop.
+        return sp.allclose(self.start,self.end,1e-8,0)
+    def attempttoJoin(self,sect):
+        #Tries to add sect, another section, to either end of self.
+        if sp.allclose(self.end,sect.start,1e-8,0):
+            self.edges.extend(sect.edges)
+            self.end = sect.end
+            return True
+        if sp.allclose(self.start,sect.end,1e-8,0):
+            self.edges = sect.edges + self.edges
+            self.start = sect.start
+            return True
+        return False
+
 def order(layer):
-    unsorted = layer
-    activeEdge = unsorted[0]
-    running = True
-    output = []
-    count = len(unsorted)-1
-    loop = []
-    while running:
-        startCount = count
-        for edge in unsorted[1:]:
-            if sp.allclose(edge.a,activeEdge.b,1e-8,0):
-                #If this edge starts at the end of the last edge
-                loop.append(edge)     #Add it to the order
-                unsorted.remove(edge)      #Take it out of the old list.
-                activeEdge = edge       #Set it as the new last edge
-                count -= 1
+    #Sorts layer.borders into a list of loops. The loops are ordered such that each one touches its neighbors in the list index. Stores the output in layer.loops.
+    segments = [section(layer.borders[0])]
+    for edge in layer.borders[1:]:
+        success = False
+        for seg in segments:
+            if seg.attempttoAdd(edge):
+                success = True
                 break
-        if count==startCount:
-            print "Adding loop of length:" + str(len(loop))
-            output.append(loop)
-            loop =[]
-        if count==0:
-            print "Ending while. Current loop length:" + str(len(loop))
-            output.append(loop)
-            running = False
-    return output
+        if not success:
+            segments.append(section(edge))
+    while not allClosed(segments):
+        for outerSeg in segments:
+            for innerSeg in segments:
+                if outerSeg.attempttoJoin(innerSeg):
+                    segments.remove(innerSeg)
+        allClosed(segments)
+    layer.loops = [seg.edges for seg in segments]
+    
+    
+    layer.loops = [seg.edges for seg in segments]
+def allClosed(sections):
+    #Checks if all the sections in sections, a list of section objects, are closed.
+    for seg in sections:
+        if not seg.checkClosed():
+            return False
+    return True
+            
+            
+    
+        
+            
 
 def clean(layer):
     #Takes a straightened, ordered layer and turns any colinear edges with shared endpoints into single edges.
