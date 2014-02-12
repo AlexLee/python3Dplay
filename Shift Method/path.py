@@ -75,23 +75,18 @@ def order(layer):
                     segments.remove(innerSeg)
         allClosed(segments)
     layer.loops = [seg.edges for seg in segments]
-    
-    
-    layer.loops = [seg.edges for seg in segments]
+
 def allClosed(sections):
     #Checks if all the sections in sections, a list of section objects, are closed.
     for seg in sections:
         if not seg.checkClosed():
             return False
     return True
-            
-            
-    
-        
-            
+
 
 def clean(layer):
     #Takes a straightened, ordered layer and turns any colinear edges with shared endpoints into single edges.
+    #Outdated
     cleanLayer = []
     skip = False
     for index in range(len(layer)-1):
@@ -112,7 +107,11 @@ def clean(layer):
     return cleanLayer
                 
 
-def shell(shellCount,mesh,loopList,extrusionWidth):
-    #This function takes a flat layer which has been straightened, ordered, and cleaned, then adds shells to it.
-    #If input is [loop1,loop2,loop3] output is [loop1,shells of loop 1,loop 2, shells of loop 2,...]
-    print "Not implemented woo!"
+def shell(shellCount,extrusionWidth,layer):
+    #This function takes a layer which has been through straighten and order, and forms the perimeter lines which will actually be extruded from the loops.
+    insets = [n*extrusionWidth+extrusionWidth/2.0 for n in range(shellCount)]
+    shells = []
+    for inset in insets:
+        for loop in layer.loops:
+            for edge in loop:
+                right = sp.cross(sp.array([0,0,1]),edge.dir[0])
