@@ -7,4 +7,6 @@ import gcode_Exporter
 
 test = stl_importer.stl_import('twoLoop.stl')
 layers = test.chop(1)
-path.straightenAll(layers)
+path.straighten(layers[-2])
+path.order(layers[-2])
+shellList = path.shell(3,0.25,layers[-2])

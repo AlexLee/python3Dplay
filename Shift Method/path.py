@@ -4,23 +4,22 @@ import mesh
 import layerClass
 
 
-def straighten(layer, mesh):
+def straighten(layer):
     #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the left.
     #layer is a list of edges outputted by mesh.chop. It is NOT a layer.
     newEdges = []
-    for edge in layer:
+    for edge in layer.borders:
         right = sp.cross(edge.dir[0],sp.array([0,0,1]))
-        if mesh.contains(edge.a-0.01*right+0.5*edge.length*edge.dir[0]):
+        if layer.mesh.contains(edge.a-0.01*right+0.5*edge.length*edge.dir[0]):
             newEdges.append(edge)
         else:
             newEdges.append(Basics.edge(edge.b,edge.a))
-    return newEdges
+    layer.borders = newEdges
 
 def straightenAll(layerList):
     #Straightens the borders of all the layers in a list of layers.
-    part = layerList[0].mesh
     for layer in layerList:
-        layer.borders=straighten(layer.borders,part)
+        straighten(layer)
 
 class section():
     #A contiguous list of edges, which can be open or closed.
@@ -110,8 +109,28 @@ def clean(layer):
 def shell(shellCount,extrusionWidth,layer):
     #This function takes a layer which has been through straighten and order, and forms the perimeter lines which will actually be extruded from the loops.
     insets = [n*extrusionWidth+extrusionWidth/2.0 for n in range(shellCount)]
-    shells = []
-    for inset in insets:
-        for loop in layer.loops:
+    shellGroups = []
+    for loop in layer.loops:
+        shells = []
+        for inset in insets:
+            shell = []
             for edge in loop:
-                right = sp.cross(sp.array([0,0,1]),edge.dir[0])
+                left = sp.cross(sp.array([0,0,1]),edge.dir[0])
+                shell.append(Basics.edge(edge.a+left*inset,edge.b+left*inset))
+            for index in range(len(shell)-1):
+                activeEdge = shell[index]
+                nextEdge = shell[index+1]
+                if activeEdge.intersect(nextEdge,False,True):
+                    intersect = activeEdge.intersect(nextEdge,True,True)
+                    shell[index]=Basics.edge(activeEdge.a,intersect)
+                    shell[index+1]=Basics.edge(intersect,nextEdge.b)
+            activeEdge = shell[-1]
+            nextEdge = shell[0]
+            if activeEdge.intersect(nextEdge,False,True):
+                intersect = activeEdge.intersect(nextEdge,True,True)
+                shell[-1]=Basics.edge(activeEdge.a,intersect)
+                shell[0]=Basics.edge(intersect,nextEdge.b)
+            shells.append(shell)
+        shellGroups.append(shells)
+    return shellGroups
+                
