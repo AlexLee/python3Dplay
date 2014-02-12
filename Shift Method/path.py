@@ -3,7 +3,6 @@ import Basics
 import mesh
 import layerClass
 
-
 def straighten(layer):
     #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the left.
     #layer is a list of edges outputted by mesh.chop. It is NOT a layer.
@@ -82,7 +81,6 @@ def allClosed(sections):
             return False
     return True
 
-
 def clean(layer):
     #Takes a straightened, ordered layer and turns any colinear edges with shared endpoints into single edges.
     #Outdated
@@ -105,7 +103,6 @@ def clean(layer):
             cleanLayer.append(layer[-1])
     return cleanLayer
                 
-
 def shell(shellCount,extrusionWidth,layer):
     #This function takes a layer which has been through straighten and order, and forms the perimeter lines which will actually be extruded from the loops.
     insets = [n*extrusionWidth+extrusionWidth/2.0 for n in range(shellCount)]
@@ -127,10 +124,10 @@ def shell(shellCount,extrusionWidth,layer):
             activeEdge = shell[-1]
             nextEdge = shell[0]
             if activeEdge.intersect(nextEdge,False,True):
+                print "Found an intersection!"
                 intersect = activeEdge.intersect(nextEdge,True,True)
                 shell[-1]=Basics.edge(activeEdge.a,intersect)
                 shell[0]=Basics.edge(intersect,nextEdge.b)
             shells.append(shell)
         shellGroups.append(shells)
     return shellGroups
-                

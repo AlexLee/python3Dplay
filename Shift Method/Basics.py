@@ -64,6 +64,8 @@ class edge:
     def colinear(self,e):
         #Checks if self is colinear with e.
         return (0==sp.cross(self.dir[0],e.dir[0])).all() and (0==sp.cross(self.dir[0],sp.array(self.a-e.a))).all()
+    def 2dintersect(self,e):
+        return "not implemented"
     def intersect(self,e,coords=True,actual=True):
         #Returns data about the intersection of self and edge e.
         #if coords, return the intersection as a point or false if intersection DNE. If not coords, return true/false
@@ -85,7 +87,7 @@ class edge:
             SBP = sp.array(point-self.b)
             s1 = EAP[0]/EBP[0]
             s2 = SAP[0]/EBP[0]
-            if (EAP/EBP==s1).all() and (SAP/SBP==s2).all():
+            if sp.allclose(EAP/EBP,s1,1e-8,0) and sp.allclose(SAP/SBP,s2,1e-8,0):
                 if coords: return point
                 return True
             return False
