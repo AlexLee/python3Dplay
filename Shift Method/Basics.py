@@ -191,6 +191,14 @@ class tri:
         if points==[]:return (False,0)
         if len(points)==1: return (points[0],1)
         return (edge(points[0],points[1]),2)
+    def centroid(self):
+        #Return the centroid of the triangle
+        return (self.points[0] + self.points[1] + self.points[2])/3
+    def tesselate(self):
+        #Returns 3 triangles composed of selfs vertices and selfs centroid. This is a really crappy way to tesselate. The original edges are preserved and not broken up.
+        p = self.points
+        c = self.centroid()
+        return [tri([p[0],p[1],c]),tri([p[0],p[2],c]),tri([p[1],p[2],c])]
     
 ##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
 

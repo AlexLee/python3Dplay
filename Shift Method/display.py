@@ -29,6 +29,17 @@ def edgePlot(path,numbers=False):
         if numbers:
             ax.text(edge.a[0],edge.a[1],edge.a[2],str(n))
     plt.show()
-def meshShow(mesh):
-    #Displays a mesh.
-    print "unimplemented."
+def pointPlot(points):
+    fig = plt.figure()
+    ax = fig.add_subplot(111,projection='3d')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    xs = []
+    ys = []
+    zs = []
+    for p in points:
+        xs.append(p[0])
+        ys.append(p[1])
+        zs.append(p[2])
+    plt.scatter(xs,ys,zs)
+    plt.show()

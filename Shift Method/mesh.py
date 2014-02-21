@@ -71,4 +71,14 @@ class mesh:
                     edges.append(intersect[0])
             layers.append(layerClass.layer(edges,layerHeight,self))
         return layers
-                    
+    def tesselate(self,depth):
+        #This is an absolutely awful tesselation algorithm. The original edges of the triangle never get broken up. Do not use. To be replaced shortly.
+        tris = self.tris
+        while depth>=0:
+            newTris = []
+            for tri in tris:
+                newTris.extend(tri.tesselate())
+            tris = newTris
+            depth -=1
+        return mesh(newTris)
+            
