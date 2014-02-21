@@ -17,7 +17,7 @@ def display(path):
     plt.ylabel('Y')
     plt.show()
 
-def edgePlot(path):
+def edgePlot(path,numbers=False):
     #Displays path, a series of edge objects.
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
@@ -26,7 +26,8 @@ def edgePlot(path):
     for n in range(len(path)):
         edge = path[n]
         ax.plot([edge.a[0],edge.b[0]],[edge.a[1],edge.b[1]],[edge.a[2],edge.b[2]])
-        ax.text(edge.a[0],edge.a[1],edge.a[2],str(n))
+        if numbers:
+            ax.text(edge.a[0],edge.a[1],edge.a[2],str(n))
     plt.show()
 def meshShow(mesh):
     #Displays a mesh.

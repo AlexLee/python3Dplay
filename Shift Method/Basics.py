@@ -64,8 +64,30 @@ class edge:
     def colinear(self,e):
         #Checks if self is colinear with e.
         return (0==sp.cross(self.dir[0],e.dir[0])).all() and (0==sp.cross(self.dir[0],sp.array(self.a-e.a))).all()
-    def 2dintersect(self,e):
-        return "not implemented"
+    def check2dintersect(self,e):
+        #Check if the two edges intersect in 2d. Ignores Z.
+        p = self.a[:2]
+        q = e.a[:2]
+        r = (self.b-self.a)[:2]
+        s = (e.b-e.a)[:2]
+        if sp.cross(r,s)==0: return False
+        t=sp.cross(q-p,s)/sp.cross(r,s)
+        u = sp.cross(q-p,r)/sp.cross(r,s)
+        if t>=0 and t<=1 and u>=0 and u<=1:
+            return True
+        return False
+    def point2dIntersect(self,e):
+        #Return the 2d intersection of the two edges. Intersection is placed at the same z as self.a
+        p = self.a[:2]
+        q = e.a[:2]
+        r = (self.b-self.a)[:2]
+        s = (e.b-e.a)[:2]
+        t=sp.cross(q-p,s)/sp.cross(r,s)
+        u = sp.cross(q-p,r)/sp.cross(r,s)
+        if t>=0 and t<=1 and u>=0 and u<=1:
+            intersect = p+t*r
+            return sp.array([intersect[0],intersect[1],self.a[2]])
+        return None
     def intersect(self,e,coords=True,actual=True):
         #Returns data about the intersection of self and edge e.
         #if coords, return the intersection as a point or false if intersection DNE. If not coords, return true/false
