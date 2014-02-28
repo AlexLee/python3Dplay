@@ -6,21 +6,22 @@ import path
 import surfaces
 #import mesh
 
-w1 = surfaces.wave(1.5,20,0,0)
+w1 = surfaces.wave(5,8,0,0)
 test = stl_importer.stl_import('model.stl')
-m1 = test.tesselate(1)
-#m1 = w1.meshShift(m1,-1)
-##layers = test.chop(2)
+test = test.tesselate(1)
+test = w1.meshShift(test,-1)
+layers = test.chop(.5)
+##path.straighten(layers[3])
+##path.order(layers[3])
+
 ##for layer in layers:
 ##    path.straighten(layer)
 ##    path.order(layer)
 ##    path.cleanLayer(layer)
 ##    path.shell(3,0.75,layer)
-##    path.wrapLayer(layer,w1,8)
-##chain = []
-##for layer in layers:
-##    for a in layer.shells:
-##        for b in a:
-##            chain.extend(b)
-##display.edgePlot(chain)
+##    path.wrapLayer(layer,w1,4)
 
+chain = []
+for layer in layers:
+    chain.extend(layer.borders)
+display.edgePlot(chain)

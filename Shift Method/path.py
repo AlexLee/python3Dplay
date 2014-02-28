@@ -8,18 +8,18 @@ def straighten(layer):
     #Changes all the edges in layer so that if the vector from a to b is regarded as forward, the inside of mesh is always to the left.
     #layer is a list of edges outputted by mesh.chop. It is NOT a layer.
     newEdges = []
+    startLen = len(layer.borders)
     for edge in layer.borders:
         right = sp.cross(edge.dir[0],sp.array([0,0,1]))
-        if layer.mesh.contains(edge.a-0.01*right+0.5*edge.length*edge.dir[0]):
+        testPoint = edge.midpoint() - 0.0001 * right        #A testpoint which is a miniscule distance to the left of the line.
+        if layer.mesh.contains(testPoint):
             newEdges.append(edge)
+            print "Did not flip"
         else:
+            print "Flipped"
             newEdges.append(Basics.edge(edge.b,edge.a))
+    if startLen!=len(newEdges): print "straighten procedure has lost edges."
     layer.borders = newEdges
-
-def straightenAll(layerList):
-    #Straightens the borders of all the layers in a list of layers.
-    for layer in layerList:
-        straighten(layer)
 
 class section():
     #A contiguous list of edges, which can be open or closed.
@@ -28,29 +28,35 @@ class section():
         self.edges = [startEdge]
         self.end = startEdge.b
         self.start = startEdge.a
-    def __str__(self):
+    def __len__(self):
         return len(self.edges)
     def attempttoAdd(self,edge):
         #Attempts to add the edge to either end. updates self.start or end if it succeeds. Returns boolean for success.
-        if sp.allclose(self.end,edge.a):
+        if sp.allclose(self.end,edge.a,1e-8,0):
+            #Put edge at the end of self.edges if it starts at the end of the current last edge.
             self.edges.append(edge)
             self.end = edge.b
             return True
-        if sp.allclose(self.start,edge.b):
+        if sp.allclose(self.start,edge.b,1e-8,0):
+            #Put edge at the start of self.edges if it starts at the start of the current first edge.
             self.edges = [edge] + self.edges
             self.start = edge.a
             return True
         return False
     def checkClosed(self):
         #Checks if section is a closed loop.
-        return sp.allclose(self.start,self.end)
+        if sp.allclose(self.start,self.end):
+            print "Closed one!"
+            return sp.allclose(self.start,self.end)
     def attempttoJoin(self,sect):
         #Tries to add sect, another section, to either end of self.
         if sp.allclose(self.end,sect.start):
+            #If sect starts at the end of self, add sect's edges to the end of self's edges and update self's end.
             self.edges.extend(sect.edges)
             self.end = sect.end
             return True
         if sp.allclose(self.start,sect.end):
+            #If sect ends where self starts, add sect's edges to the beginning of self's edges and update self's start.
             self.edges = sect.edges + self.edges
             self.start = sect.start
             return True
@@ -63,16 +69,22 @@ def order(layer):
         success = False
         for seg in segments:
             if seg.attempttoAdd(edge):
+                #This conditional adds edge to seg if it can, and returns boolean for success.
                 success = True
                 break
         if not success:
+            #If I can't add edge to any segments, I need to spin it off as its own segment.
             segments.append(section(edge))
-    while not allClosed(segments):
+    count = 0
+    while not allClosed(segments) and count<=15:
+        count +=1
+        print count
         for outerSeg in segments:
             for innerSeg in segments:
                 if outerSeg.attempttoJoin(innerSeg):
+                    print "Got one"
                     segments.remove(innerSeg)
-        allClosed(segments)
+    print "segments" + str(len(segments))
     layer.loops = [seg.edges for seg in segments]
 
 def allClosed(sections):

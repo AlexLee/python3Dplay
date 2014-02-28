@@ -116,6 +116,8 @@ class edge:
     def equivalent(self,e):
         #Checks if e shares both endpoints with self.
         return (sp.array_equal(self.a,e.a) and sp.array_equal(self.b,e.b)) or (sp.array_equal(self.a,e.b) and sp.array_equal(self.b,e.a))
+    def midpoint(self):
+        return (self.a+self.b)/2
 
 class tri:
     #Stores a triangle. Normal is defined as a vector aka a 3x2 array. Triangle is formed from an ordered list of 3 connected points aka 3x1 arrays.
@@ -148,11 +150,11 @@ class tri:
         return (p*(p-self.edges[0].length)*(p-self.edges[1].length)*(p-self.edges[2].length))**0.5    
     def vector_intersect(self,vector_in,coords=False):
         #Checks if the vector intersects self.plane, then tests whether the point is inside tri. Coords decides whether a boolean or a point object is returned.
-        intersect = self.plane.vector_intersect(vector_in,True)
-        if type(intersect)==type(False): return False
+        intersect = self.plane.vector_intersect(vector_in)
+        if not intersect[1]: return False
         else:
-            if self.contains(intersect):
-                if coords: return intersect
+            if self.contains(intersect[0]):
+                if coords: return intersect[0]
                 return True
             return False
     def contains(self,p):
@@ -180,14 +182,20 @@ class tri:
         if type(intersect)==type(False): return False
         return distance(intersect,e.a)<e.length and distance(intersect,e.b)<e.length
     def plane_intersect(self,p):
-        #Returns a list of an edge and 
+        #Returns a tuple of an edge
         #A triangle which is in a plane produces only vectors in the plane, and the vector_intersect method on planes does not count vectors in the plane, thus points will only ever have length 2.
-        sides=[self.edges[0].dir,self.edges[1].dir,self.edges[2].dir]
+        vertices = []
+        for vertex in self.points:
+            if p.contains(vertex):
+                vertices.append(vertex)
+        if len(vertices)==2:
+            return (edge(vertices[0],vertices[1]),2)
+        if len(vertices)==1 or len(vertices)==3: return (False,0)
         points=[]
-        for side in sides:
-            intersect=p.vector_intersect(side,True)
-            if type(intersect)!=type(False):
-                points.append(intersect)
+        for e in self.edges:
+            i = p.edgeIntersect(e)
+            if i[1]:
+                points.append(i[0])
         if points==[]:return (False,0)
         if len(points)==1: return (points[0],1)
         return (edge(points[0],points[1]),2)
@@ -195,44 +203,21 @@ class tri:
         #Return the centroid of the triangle
         return (self.points[0] + self.points[1] + self.points[2])/3
     def tesselate(self):
-        #Returns 3 triangles composed of selfs vertices and selfs centroid. This is a really crappy way to tesselate. The original edges are preserved and not broken up.
+        #Returns 3 triangles composed of selfs vertices and midpoints.
         p = self.points
-        c = self.centroid()
-        return [tri([p[0],p[1],c]),tri([p[0],p[2],c]),tri([p[1],p[2],c])]
+        #edges and thus midpoints are ordered 01, 12, 20.
+        m = [e.midpoint() for e in self.edges]
+        return [tri([p[0],m[0],m[2]]),tri([p[1],m[0],m[1]]),tri([p[2],m[1],m[2]]),tri([m[0],m[1],m[2]])]
     
-##I don't think I have a need for this function anymore, but I'm keeping it in case I do. Also I'm not sure I ever tested this very well.
-
-##    def tri_intersect(self,t):
-##        #Returns an edge in both self and t.
-##        pEdge = self.plane_intersect(t.plane)
-##        intersects = []
-##        for edge in t.edges:
-##            if pEdge.intersects(edge,False):
-##                intersects.append(pEdge.intersects(edge,True))
-##        if len(intersects)==0:
-##            #If there are no intersections between the edges of tri and the edge formed by the plane intersect, the original plane intersect is on the surface of tri and therefore equivalent to
-##            #tri intersect.
-##            return pEdge
-##        if len(intersects)==1:
-##            #If there is 1 intersection, one end of pEdge will still be in tri. So we check if pEdge.a is in tri, and if it is return an edge from it to the 1 intersect. Otherwise we do the same to B
-##            point  = intersects[0]
-##            if self.contains(pEdge.a):
-##                return edge(pEdge.a,point)
-##            return edge(pEdge.b,point)
-##        if len(intersects)==2:
-##            #If there are 2 intersections, pEdge.a and pEdge.b both lie outside Tri, and the intersection of the triangles goes from one edge of t to the other. Thus it is the edge from one intersect
-##            #to the other
-##            return edge(intersects[0],intersects[1])
-##            
-            
+                    
 class plane:
     #Defines a plane from a point and a normal.
     def __init__(self,point,normal):
         self.origin = point
         self.normal = unit(normal)
-    def vector_intersect(self,v,coords=False):
+    def vector_intersect(self,v):
         #Tests whether a vector v hits self
-        if (self.normal[0].dot(v[0])==0).all(): return False
+        if (self.normal[0].dot(v[0])==0).all(): return (None,False)
         #Dot product includes cos(angle between 2 vectors) therefore if the angle between 2 vectors is >90 dot product is negative. A negative dot-prod signals an obtuse angle between 2 vectors.
         #So if we were only trying to detect hits to the "back" of the plane, we could toss out any vectors whose dot with the normal is negative. However we don't care which side we're hitting, and some obtuse angles will still hit,
         #so we use (plane origin - vector origin) as a vector known to hit from the same side as v. In this way if the signs of the 2 dot products are different, we know that v does not hit.
@@ -244,9 +229,21 @@ class plane:
                 parameter = self.normal[0].dot(self.origin-v[1])/self.normal[0].dot(v[0])
         elif v.shape==(3,):
             return 'Attempted to intersect a vector of shape [3,]. Without starting point, intersects are meaningless.'
-        if coords:
-            if parameter>=0: return v[1]+(v[0]*parameter)
-        elif parameter>=0: return True
-        return False
+        if parameter>=0: return (v[1]+(v[0]*parameter),True)
+        return (None,False)
+    def edgeIntersect(self,e):
+        #Returns tuple of (intersection point,success boolean) for the intersection of self with edge e.
+        i = self.vector_intersect(e.dir)
+        if i[1]:
+            d = distance(i[0],e.a)
+        else: return (None,False)
+        if d<e.length:
+            return (i[0],True)
+        else:
+            return (None,False)
+    def contains(self,point):
+        #Check if point is in plane.
+        line = point-self.origin
+        return sp.dot(line,self.normal[0])==0
 
 

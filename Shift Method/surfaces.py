@@ -8,28 +8,28 @@ class surface:
     '''
     Parent class which will contain the shift functions.
     '''
-    def pointShift(self,p,up=1):
+    def pointShift(self,p,u=1):
         '''
-        Returns point p shifted vertically by its functional value.
+        Returns point p shifted vertically by its functional value * u
         '''
-        return p+sp.array([0,0,up*self.f(p)])
-    def edgeShift(self,e,up=1):
+        return p+sp.array([0,0,u*self.f(p)])
+    def edgeShift(self,e,u=1):
         '''
-        Returns edge e with its endpoints shifted vertically by their functional values. This does not interpolate at all, so large edges will have problems.
+        Returns edge e with its endpoints shifted vertically by their functional values*u. This does not interpolate at all, so large edges will have problems.
         '''
-        return Basics.edge(self.pointShift(e.a,up),self.pointShift(e.b,up))
-    def triShift(self,t,up=1):
+        return Basics.edge(self.pointShift(e.a,u),self.pointShift(e.b,u))
+    def triShift(self,t,u=1):
         '''
         Returns tri t with its vertices shifted vertically by their functional values. No interpolation is performed by this function.
         '''
-        return Basics.tri([self.pointShift(t.points[0],up),self.pointShift(t.points[1],up),self.pointShift(t.points[2],up)])
-    def meshShift(self,m,up=1):
+        return Basics.tri([self.pointShift(t.points[0],u),self.pointShift(t.points[1],u),self.pointShift(t.points[2],u)])
+    def meshShift(self,m,u=1):
         '''
         Returns mesh m with triShift applied to all its triangles.
         '''
         newTris = []
         for tri in m.tris:
-            newTris.append(self.triShift(tri,up))
+            newTris.append(self.triShift(tri,u))
         return mesh.mesh(newTris)
     def dDeriv(self,v,p):
         '''

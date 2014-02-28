@@ -49,9 +49,9 @@ class mesh:
         return False
     def contains(self,p):
         #Checks whether point is inside self.
-        if not self.region[1][0]<=p[0]<=self.region[0][0]: return False #Simple bounding box check
-        if not self.region[1][1]<=p[1]<=self.region[0][1]: return False
-        if not self.region[1][2]<=p[2]<=self.region[0][2]: return False
+##        if not self.region[1][0]<=p[0]<=self.region[0][0]: return False #Simple bounding box check
+##        if not self.region[1][1]<=p[1]<=self.region[0][1]: return False
+##        if not self.region[1][2]<=p[2]<=self.region[0][2]: return False
         testVector = sp.array([[0,0,50+self.region[0][2]],p])
         inside = False
         for tri in self.tris:

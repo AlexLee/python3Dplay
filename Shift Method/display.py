@@ -4,19 +4,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import Basics
 
-def display(path):
-    #Displays path, a series of length 3 iterables representing points in 3d cartesian space.
-    print path[0]
-    Xs = [point[0] for point in path]
-    Ys = [point[1] for point in path]
-    Zs = [point[2] for point in path]
-    fig = plt.figure()
-    ax = fig.add_subplot(111,projection='3d')
-    ax.plot(Xs,Ys,Zs)
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.show()
-
 def edgePlot(path,numbers=False):
     #Displays path, a series of edge objects.
     fig = plt.figure()
@@ -34,12 +21,8 @@ def pointPlot(points):
     ax = fig.add_subplot(111,projection='3d')
     plt.xlabel('X')
     plt.ylabel('Y')
-    xs = []
-    ys = []
-    zs = []
-    for p in points:
-        xs.append(p[0])
-        ys.append(p[1])
-        zs.append(p[2])
-    plt.scatter(xs,ys,zs)
+    xs = [point[0] for point in path]
+    ys = [point[1] for point in path]
+    zs = [point[2] for point in path]
+    ax.scatter(xs,ys,zs)
     plt.show()
