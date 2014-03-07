@@ -58,10 +58,11 @@ class mesh:
             if tri.vector_intersect(testVector): inside = not inside
         return inside
     def chop(self,layerHeight):
+        #This is chunky and bad. Needs to be done much more intelligently for anything beyond proof of concept. The number of layers calculation sucks.
         #Returns an ordered list of layers. Each layer consists of a list of edges which represent the intersection of self with the plane z=(layer #-1/2) * layerHeight. The first item in each layer is a point inside the mesh.
         height = self.region[0][2]-self.region[1][2]
         layers= []
-        for layer in range(int(height/layerHeight)):
+        for layer in range(int(sp.floor(height/layerHeight))):
             #Adding 0.5*layerHeight to height of cutting plane so that the plane will be as representative as possible of the general layer volume.
             cuttingPlane = Basics.plane(sp.array([0,0,(layer+0.5)*layerHeight]),sp.array([[0,0,1],[0,0,0]]))
             edges = []
@@ -74,9 +75,11 @@ class mesh:
     def tesselate(self,depth):
         #This is an absolutely awful tesselation algorithm. The original edges of the triangle never get broken up. Do not use. To be replaced shortly.
         tris = self.tris
-        while depth>=0:
+        while depth>=1:
+            #print "While loop running. Current depth " + str(depth)
             newTris = []
             for tri in tris:
+                #print "For loop"
                 newTris.extend(tri.tesselate())
             tris = newTris
             depth -=1

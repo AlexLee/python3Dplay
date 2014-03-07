@@ -14,9 +14,9 @@ def straighten(layer):
         testPoint = edge.midpoint() - 0.0001 * right        #A testpoint which is a miniscule distance to the left of the line.
         if layer.mesh.contains(testPoint):
             newEdges.append(edge)
-            print "Did not flip"
+            #print "Did not flip"
         else:
-            print "Flipped"
+            #print "Flipped"
             newEdges.append(Basics.edge(edge.b,edge.a))
     if startLen!=len(newEdges): print "straighten procedure has lost edges."
     layer.borders = newEdges
@@ -46,7 +46,7 @@ class section():
     def checkClosed(self):
         #Checks if section is a closed loop.
         if sp.allclose(self.start,self.end):
-            print "Closed one!"
+            #print "Closed one!"
             return sp.allclose(self.start,self.end)
     def attempttoJoin(self,sect):
         #Tries to add sect, another section, to either end of self.
@@ -78,13 +78,13 @@ def order(layer):
     count = 0
     while not allClosed(segments) and count<=15:
         count +=1
-        print count
+        #print count
         for outerSeg in segments:
             for innerSeg in segments:
                 if outerSeg.attempttoJoin(innerSeg):
-                    print "Got one"
+                    #print "Got one"
                     segments.remove(innerSeg)
-    print "segments" + str(len(segments))
+    #print "segments" + str(len(segments))
     layer.loops = [seg.edges for seg in segments]
 
 def allClosed(sections):
@@ -139,6 +139,7 @@ def cleanLayer(layer):
     layer.loops = cleanLoops
         
 def shell(shellCount,extrusionWidth,layer):
+    #This also needs to be made smarter. It can't handle intersections that change the order of the loop yet.
     '''
     This function takes a layer which has been through straighten and order, and forms the perimeter lines which will actually be extruded from the loops.
     Stores perimeter lines in layer.shells as a list of shell groups. Each shell group is a list of shells with varying insets. Shells are ordered lists of edges similar to loops.
@@ -152,6 +153,7 @@ def shell(shellCount,extrusionWidth,layer):
             for edge in loop:
                 left = sp.cross(sp.array([0,0,1]),edge.dir[0])
                 shell.append(Basics.edge(edge.a+left*inset,edge.b+left*inset))
+            
             for index in range(len(shell)-1):
                 activeEdge = shell[index]
                 nextEdge = shell[index+1]

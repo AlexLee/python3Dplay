@@ -208,7 +208,6 @@ class tri:
         #edges and thus midpoints are ordered 01, 12, 20.
         m = [e.midpoint() for e in self.edges]
         return [tri([p[0],m[0],m[2]]),tri([p[1],m[0],m[1]]),tri([p[2],m[1],m[2]]),tri([m[0],m[1],m[2]])]
-    
                     
 class plane:
     #Defines a plane from a point and a normal.
