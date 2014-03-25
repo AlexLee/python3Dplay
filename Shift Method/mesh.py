@@ -22,21 +22,12 @@ class mesh:
             string=string+' [' + str(tri) + ']'
         return string
     def updateLims(self):
-        xSum = 0 
-        ySum = 0
-        zSum = 0
-        for pointA in self.points:
-            xSum += float(pointA[0])
-            ySum += float(pointA[1])
-            zSum += float(pointA[2])
-            self.region[0][0]=float(max(self.region[0][0],pointA[0]))
-            self.region[1][0]=float(min(self.region[1][0],pointA[0]))
-            self.region[0][1]=float(max(self.region[0][1],pointA[1]))
-            self.region[1][1]=float(min(self.region[1][1],pointA[1]))
-            self.region[0][2]=float(max(self.region[0][2],pointA[2]))
-            self.region[1][2]=float(min(self.region[1][2],pointA[2]))            
+        Xs = [point[0] for point in self.points]
+        Ys = [point[1] for point in self.points]
+        Zs = [point[2] for point in self.points]
+        self.region[0][0]=[[max(Xs),max(Ys),max(Zs)],[min(Xs),min(Ys),min(Zs)]]
         pointCount = len(self.points)
-        self.center = sp.array([xSum/pointCount,ySum/pointCount,zSum/pointCount]) #Center of all points in the mesh, useful for some optimizations.
+        self.center = [sum[l] for l in [Xs,Ys,Zs]]/pointCount #Center of all vertices in the mesh, useful for some optimizations.
     def vector_intersect(self,v):
         for tri in self.tris:
             if tri.vector_intersect(v):

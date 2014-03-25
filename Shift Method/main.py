@@ -8,7 +8,7 @@ import surfaces
 
 w1 = surfaces.wave(5,30,0,0)
 test = stl_importer.stl_import('model.stl')
-test = test.tesselate(2)
+#test = test.tesselate(2)
 #test = w1.meshShift(test,-1)
 layers = test.chop(3)
 layers = layers[:-1]
